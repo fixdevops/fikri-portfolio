@@ -1,0 +1,92 @@
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { collection, limit, onSnapshot, query, orderBy } from "firebase/firestore";
+import { db } from "../firebase";
+
+export default function CertificatesSection() {
+  const [certificates, setCertificates] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, "my-certificate"),
+      orderBy("createdAt", "desc"), // Assuming you have a createdAt field, otherwise remove orderBy
+      limit(3)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const certsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setCertificates(certsData);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching certificates:", error);
+      setLoading(false);
+      // Fallback in case orderBy("createdAt") fails due to missing index
+      const simpleQ = query(collection(db, "my-certificate"), limit(3));
+        onSnapshot(simpleQ, (snap) => {
+            const simpleData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setCertificates(simpleData);
+        });
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  return (
+    <div>
+      <div className="flex justify-between items-center w-full">
+        <h2 className="text-[18px] font-bold text-gray-800 flex items-center gap-2">
+          <i className="ri-award-fill"></i> Certifications
+        </h2>
+        <Link to="/certificates" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
+          View more
+        </Link>
+      </div> <br />
+      
+      {loading ? (
+         <div className="flex justify-center p-4">
+           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
+         </div>
+      ) : certificates.length === 0 ? (
+        <div className="text-center py-8 bg-white border border-gray-200 rounded-lg text-gray-500">
+           No certificates added yet.
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          <div className="w-full mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {certificates.map((cert) => (
+              <div
+                key={cert.id}
+                className="w-full bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-shadow"
+              >
+                <div className="sertif-image overflow-hidden">
+                  <img
+                    src={cert.imageUrl || "https://via.placeholder.com/400x300?text=No+Image"}
+                    alt={cert.title}
+                    className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div className="p-3">
+                  <h3 className="text-sm font-medium text-gray-600 text-left line-clamp-1">
+                    {cert.title}
+                  </h3>
+                   <div className="mt-2">
+                    <Link
+                      to="/certificates"
+                      className="inline-block w-full border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium py-2 px-3 rounded-md transition duration-200 text-center text-xs"
+                    >
+                      View Details
+                    </Link>
+                   </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
