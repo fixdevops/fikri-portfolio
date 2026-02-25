@@ -1,38 +1,30 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { collection, limit, onSnapshot, query, orderBy } from "firebase/firestore";
-import { db } from "../firebase";
+import { supabase } from "../supabase";
 
 export default function CertificatesSection() {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(
-      collection(db, "my-certificate"),
-      orderBy("createdAt", "desc"), // Assuming you have a createdAt field, otherwise remove orderBy
-      limit(3)
-    );
+    const fetchCertificates = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("my_certificate")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(3);
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const certsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setCertificates(certsData);
-      setLoading(false);
-    }, (error) => {
-      console.error("Error fetching certificates:", error);
-      setLoading(false);
-      // Fallback in case orderBy("createdAt") fails due to missing index
-      const simpleQ = query(collection(db, "my-certificate"), limit(3));
-        onSnapshot(simpleQ, (snap) => {
-            const simpleData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setCertificates(simpleData);
-        });
-    });
+        if (error) throw error;
+        setCertificates(data || []);
+      } catch (error) {
+        console.error("Error fetching certificates:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return () => unsubscribe();
+    fetchCertificates();
   }, []);
 
   return (
@@ -64,7 +56,7 @@ export default function CertificatesSection() {
               >
                 <div className="sertif-image overflow-hidden">
                   <img
-                    src={cert.imageUrl || "https://via.placeholder.com/400x300?text=No+Image"}
+                    src={cert.image_url || "https://via.placeholder.com/400x300?text=No+Image"}
                     alt={cert.title}
                     className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300"
                   />

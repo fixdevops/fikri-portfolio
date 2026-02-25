@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { auth, db, serverTimestamp } from '../firebase';
-import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { addDoc, collection, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { Link } from 'react-router-dom';
+import { supabase } from '../supabase';
 
 export default function ChatRoomComponents() {
     const [isOpen, setIsOpen] = useState(false);
@@ -17,15 +14,18 @@ export default function ChatRoomComponents() {
     const messagesContainerRef = useRef(null);
     const [dateHeaders, setDateHeaders] = useState({});
 
-    const provider = new GoogleAuthProvider();
-    const OWNER_UID = "r28jzkoDUaUoguZoQI7frNe4w5N2";
+    const OWNER_EMAIL = "fikri@example.com"; // Change to your Supabase admin email
 
-    // Handle login dengan Google
+    // Handle login with Supabase OAuth (Google)
     const handleLogin = async () => {
         try {
-            const result = await signInWithPopup(auth, provider);
-            setUser(result.user);
-            setLastSeenIndex(messages.length);
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.href
+                }
+            });
+            if (error) throw error;
         } catch (error) {
             console.error('Error saat login:', error);
             alert(`Login gagal: ${error.message}`);
@@ -35,7 +35,7 @@ export default function ChatRoomComponents() {
     // Handle logout
     const handleLogout = async () => {
         try {
-            await signOut(auth);
+            await supabase.auth.signOut();
             setUser(null);
             setReplyingTo(null);
         } catch (error) {
@@ -46,27 +46,31 @@ export default function ChatRoomComponents() {
     // Handle kirim pesan
     const handleSendMessage = async (e) => {
         e.preventDefault();
-        if (newMessage.trim() === '') return;
+        if (newMessage.trim() === '' || !user) return;
 
         try {
             const messageData = {
                 text: newMessage,
-                displayName: user.displayName,
-                photoURL: user.photoURL,
-                createdAt: serverTimestamp(),
-                uid: user.uid,
-                isOwner: user.uid === OWNER_UID
+                display_name: user.user_metadata?.full_name || user.email,
+                photo_url: user.user_metadata?.avatar_url || '',
+                created_at: new Date().toISOString(),
+                uid: user.id,
+                is_owner: user.email === OWNER_EMAIL
             };
 
             if (replyingTo) {
-                messageData.replyTo = {
+                messageData.reply_to = {
                     id: replyingTo.id,
                     text: replyingTo.text,
-                    displayName: replyingTo.displayName
+                    display_name: replyingTo.display_name
                 };
             }
 
-            await addDoc(collection(db, 'chatMessages'), messageData);
+            const { error } = await supabase
+                .from('chat_messages')
+                .insert([messageData]);
+
+            if (error) throw error;
             setNewMessage('');
             setReplyingTo(null);
         } catch (error) {
@@ -80,9 +84,9 @@ export default function ChatRoomComponents() {
     };
 
     // Format jam menjadi HH:MM
-    const formatTime = (date) => {
-        if (!date) return '';
-        return date.toLocaleTimeString('en-US', {
+    const formatTime = (dateStr) => {
+        if (!dateStr) return '';
+        return new Date(dateStr).toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
             hour12: false
@@ -90,10 +94,10 @@ export default function ChatRoomComponents() {
     };
 
     // Format tanggal menjadi "18 Juli 2025"
-    const formatFullDate = (date) => {
-        if (!date) return '';
+    const formatFullDate = (dateStr) => {
+        if (!dateStr) return '';
         const options = { day: 'numeric', month: 'long', year: 'numeric' };
-        return date.toLocaleDateString('id-ID', options);
+        return new Date(dateStr).toLocaleDateString('id-ID', options);
     };
 
     // Handle buka chat
@@ -114,7 +118,7 @@ export default function ChatRoomComponents() {
         let currentDate = '';
         
         messages.forEach((msg, index) => {
-            const msgDate = msg.createdAt ? formatFullDate(msg.createdAt) : '';
+            const msgDate = msg.created_at ? formatFullDate(msg.created_at) : '';
             if (msgDate !== currentDate) {
                 headers[index] = msgDate;
                 currentDate = msgDate;
@@ -124,9 +128,23 @@ export default function ChatRoomComponents() {
         setDateHeaders(headers);
     };
 
+    // Fetch messages
+    const fetchMessages = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('chat_messages')
+                .select('*')
+                .order('created_at', { ascending: true });
+            if (error) throw error;
+            setMessages(data || []);
+            checkDateHeaders(data || []);
+        } catch (error) {
+            console.error('Error fetching messages:', error);
+        }
+    };
+
     useEffect(() => {
         if (isOpen) {
-            // Scroll ke posisi terakhir yang dilihat user
             if (messagesContainerRef.current && lastSeenIndex > 0) {
                 const lastSeenElement = document.getElementById(`msg-${lastSeenIndex-1}`);
                 if (lastSeenElement) {
@@ -138,36 +156,41 @@ export default function ChatRoomComponents() {
         }
     }, [messages, isOpen]);
 
-    // Subscribe ke perubahan data chat
+    // Subscribe to real-time changes using Supabase Realtime
     useEffect(() => {
-        const q = query(collection(db, 'chatMessages'), orderBy('createdAt', 'asc'));
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const messagesData = [];
-            querySnapshot.forEach((doc) => {
-                messagesData.push({
-                    id: doc.id,
-                    ...doc.data(),
-                    // Convert Firestore timestamp to Date object
-                    createdAt: doc.data().createdAt?.toDate()
-                });
-            });
-            setMessages(messagesData);
-            checkDateHeaders(messagesData);
-        });
+        fetchMessages();
 
-        return () => unsubscribe();
+        const channel = supabase
+            .channel('chat_messages_changes')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'chat_messages'
+            }, () => {
+                fetchMessages();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
 
-    // Listen perubahan status auth
+    // Listen to auth state changes
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged((user) => {
-            setUser(user);
-            if (user) {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user || null);
+            if (session?.user) {
                 setLastSeenIndex(messages.length);
             }
         });
 
-        return () => unsubscribe();
+        // Check initial session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user || null);
+        });
+
+        return () => subscription.unsubscribe();
     }, [messages.length]);
 
     const handleReply = (message) => {
@@ -204,11 +227,11 @@ export default function ChatRoomComponents() {
                             {user ? (
                                 <>
                                     <img
-                                        src={user.photoURL}
-                                        alt={user.displayName}
+                                        src={user.user_metadata?.avatar_url || ''}
+                                        alt={user.user_metadata?.full_name || 'User'}
                                         className="w-6 h-6 rounded-full object-cover"
                                     />
-                                    <h3 className="font-semibold text-sm">{user.displayName}</h3>
+                                    <h3 className="font-semibold text-sm">{user.user_metadata?.full_name || user.email}</h3>
                                 </>
                             ) : (
                                 <>
@@ -220,7 +243,6 @@ export default function ChatRoomComponents() {
 
                         {user && (
                             <div className="relative flex items-center">
-                                {/* Icon titik tiga */}
                                 <button
                                     onClick={() => setShowMenu((prev) => !prev)}
                                     className="text-gray-600 hover:text-black text-lg"
@@ -228,7 +250,6 @@ export default function ChatRoomComponents() {
                                     <i className="ri-more-2-fill"></i>
                                 </button>
 
-                                {/* Dropdown menu */}
                                 {showMenu && (
                                     <div className="absolute right-0 top-8 bg-white shadow-md rounded-md z-10">
                                         <button
@@ -248,7 +269,6 @@ export default function ChatRoomComponents() {
                         ref={messagesContainerRef}
                         className="flex-1 p-4 overflow-y-auto scrollbar-hide"
                         onScroll={() => {
-                            // Update last seen index ketika user scroll
                             if (messagesContainerRef.current) {
                                 const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
                                 if (scrollTop + clientHeight >= scrollHeight - 50) {
@@ -259,7 +279,6 @@ export default function ChatRoomComponents() {
                     >
                         {messages.map((message, index) => (
                             <React.Fragment key={message.id}>
-                                {/* Tanggal header */}
                                 {dateHeaders[index] && (
                                     <div className="text-center my-3">
                                         <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
@@ -270,21 +289,21 @@ export default function ChatRoomComponents() {
                                 
                                 <div 
                                     id={`msg-${index}`}
-                                    className={`mb-3 flex ${message.uid === user?.uid ? 'justify-end' : 'justify-start'}`}
+                                    className={`mb-3 flex ${message.uid === user?.id ? 'justify-end' : 'justify-start'}`}
                                     onMouseEnter={() => setHoveredMessage(message.id)}
                                     onMouseLeave={() => setHoveredMessage(null)}
                                 >
-                                    <div className={`relative max-w-xs ${message.uid === user?.uid ? 'ml-8' : 'mr-8'}`}>
-                                        {message.uid !== user?.uid && (
+                                    <div className={`relative max-w-xs ${message.uid === user?.id ? 'ml-8' : 'mr-8'}`}>
+                                        {message.uid !== user?.id && (
                                             <div className="flex items-center mb-1">
                                                 <img
-                                                    src={message.photoURL}
-                                                    alt={message.displayName}
+                                                    src={message.photo_url}
+                                                    alt={message.display_name}
                                                     className="w-5 h-5 rounded-full mr-2 object-cover"
                                                 />
                                                 <span className="text-xs font-semibold text-gray-700">
-                                                    {message.displayName}
-                                                    {message.isOwner && (
+                                                    {message.display_name}
+                                                    {message.is_owner && (
                                                         <span className="ml-1 bg-gray-500 text-white text-[9px] px-1 py-0.5 rounded">
                                                             Author
                                                         </span>
@@ -294,27 +313,26 @@ export default function ChatRoomComponents() {
                                         )}
 
                                         {/* Reply preview */}
-                                        {message.replyTo && (
-                                            <div className={`bg-gray-100/70 text-gray-600 text-xs p-2 mb-1 rounded border-l-2 ${message.uid === user?.uid ? 'border-gray-500' : 'border-gray-400'}`}>
+                                        {message.reply_to && (
+                                            <div className={`bg-gray-100/70 text-gray-600 text-xs p-2 mb-1 rounded border-l-2 ${message.uid === user?.id ? 'border-gray-500' : 'border-gray-400'}`}>
                                                 <div className="font-semibold">
-                                                    {message.replyTo.displayName}
+                                                    {message.reply_to.display_name}
                                                 </div>
                                                 <div className="truncate">
-                                                    {message.replyTo.text}
+                                                    {message.reply_to.text}
                                                 </div>
                                             </div>
                                         )}
 
                                         <div
-                                            className={`inline-block p-2 rounded-lg text-sm relative ${message.uid === user?.uid
+                                            className={`inline-block p-2 rounded-lg text-sm relative ${message.uid === user?.id
                                                     ? 'bg-gray-600 text-white rounded-br-none'
                                                     : 'bg-gray-100 text-gray-800 rounded-bl-none'
                                                 }`}
                                         >
                                             {message.text}
                                             
-                                            {/* Tombol reply yang muncul saat hover */}
-                                            {hoveredMessage === message.id && message.uid !== user?.uid && (
+                                            {hoveredMessage === message.id && message.uid !== user?.id && (
                                                 <button
                                                     onClick={() => handleReply(message)}
                                                     className={`absolute -right-6 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm`}
@@ -325,9 +343,9 @@ export default function ChatRoomComponents() {
                                             )}
                                         </div>
 
-                                        <div className={`flex items-center mt-1 ${message.uid === user?.uid ? 'justify-end' : 'justify-start'}`}>
+                                        <div className={`flex items-center mt-1 ${message.uid === user?.id ? 'justify-end' : 'justify-start'}`}>
                                             <div className="text-[10px] text-gray-500">
-                                                {formatTime(message.createdAt)}
+                                                {formatTime(message.created_at)}
                                             </div>
                                         </div>
                                     </div>
@@ -341,7 +359,7 @@ export default function ChatRoomComponents() {
                     {replyingTo && (
                         <div className="bg-gray-100/80 border-t border-gray-200 px-3 py-2 flex justify-between items-center">
                             <div className="text-xs text-gray-600">
-                                Replying to <span className="font-semibold">{replyingTo.displayName}</span>
+                                Replying to <span className="font-semibold">{replyingTo.display_name}</span>
                             </div>
                             <button
                                 onClick={cancelReply}
@@ -360,7 +378,7 @@ export default function ChatRoomComponents() {
                                     type="text"
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
-                                    placeholder={replyingTo ? `Reply to ${replyingTo.displayName}...` : "Ketik pesan..."}
+                                    placeholder={replyingTo ? `Reply to ${replyingTo.display_name}...` : "Ketik pesan..."}
                                     className="flex-1 border border-gray-300 bg-white text-gray-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-gray-200 focus:border-gray-200 transition"
                                 />
                                 <button

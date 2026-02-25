@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import Sidebar from "./Sidebar";
 import { useLocation, useNavigate } from "react-router-dom";
-import { auth } from "../firebase";
-import { signOut } from "firebase/auth";
+import { supabase } from "../supabase";
 import LogoutConfirmModal from "./LogoutConfirmModal";
 
 const pageTitles = {
@@ -24,7 +23,7 @@ export default function Layout({ children }) {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      await supabase.auth.signOut();
       navigate("/login");
     } catch (error) {
       alert("Logout gagal: " + error.message);
@@ -43,7 +42,6 @@ export default function Layout({ children }) {
       {/* Sidebar Mobile */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          {/* Overlay dengan animasi */}
           <div
             className="absolute inset-0 bg-black transition-opacity duration-300"
             style={{
@@ -52,7 +50,6 @@ export default function Layout({ children }) {
             }}
             onClick={() => setSidebarOpen(false)}
           />
-          {/* Sidebar Mobile dengan animasi slide */}
           <div className="relative z-50 h-full">
             <div
               className="absolute left-0 top-0 h-full w-64 transform transition-transform duration-300 ease-in-out"
@@ -68,9 +65,8 @@ export default function Layout({ children }) {
 
       {/* Konten dengan margin untuk sidebar desktop */}
       <div className="flex-1 flex flex-col w-full md:ml-64 transition-all duration-300">
-        {/* Topbar - Sticky dengan shadow untuk efek depth */}
+        {/* Topbar */}
         <div className="flex items-center justify-between px-4 md:px-6 py-4 bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
-          {/* Tombol menu untuk mobile */}
           <button
             className="md:hidden text-xl text-gray-700 hover:text-gray-900 transition-colors duration-200"
             onClick={() => setSidebarOpen(true)}
@@ -97,7 +93,7 @@ export default function Layout({ children }) {
           onConfirm={handleLogout}
         />
 
-        {/* Main Content dengan smooth scroll */}
+        {/* Main Content */}
         <main className="flex-1 p-4 md:p-6 overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100">
           <div className="max-w-7xl mx-auto">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">

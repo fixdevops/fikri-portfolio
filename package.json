@@ -5,22 +5,19 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 6565",
-    "dev:api": "npm --prefix backend run dev",
     "build": "vite build",
-    "start:api": "npm --prefix backend run start",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
     "@giscus/react": "^3.1.0",
+    "@supabase/supabase-js": "^2.97.0",
     "chart.js": "^4.5.0",
-    "firebase": "^11.10.0",
     "lucide-react": "^0.534.0",
     "plyr-react": "^5.3.0",
     "react": "^19.0.0",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",
-    "react-firebase-hooks": "^5.1.1",
     "react-github-calendar": "^4.5.6",
     "react-helmet": "^6.1.0",
     "react-icon": "^1.0.0",

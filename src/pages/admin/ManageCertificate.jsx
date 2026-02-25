@@ -1,19 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  collection,
-  addDoc,
-  getDocs,
-  doc,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp
-} from "firebase/firestore";
-import { db } from "../../firebase";
+import { supabase } from "../../supabase";
+import Modal from 'react-modal';
+import Layout from "../../components/Layout";
 
 const CLOUDINARY_CLOUD_NAME = "dimscumz2";
 const CLOUDINARY_UPLOAD_PRESET = "portfolio_certs";
-import Modal from 'react-modal';
-import Layout from "../../components/Layout";
 
 Modal.setAppElement('#root');
 
@@ -21,9 +12,9 @@ export default function AdminCertificates() {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    imageUrl: "",
+    image_url: "",
     title: "",
-    courseUrl: "",
+    course_url: "",
     category: "certificate"
   });
   const [selectedFile, setSelectedFile] = useState(null);
@@ -44,17 +35,12 @@ export default function AdminCertificates() {
   const fetchCertificates = async () => {
     setLoading(true);
     try {
-      const querySnapshot = await getDocs(collection(db, "my-certificate"));
-      const certificatesData = querySnapshot.docs.map(d => ({
-        id: d.id,
-        ...d.data()
-      }));
-      certificatesData.sort((a, b) => {
-        const aTime = a.createdAt?.seconds || 0;
-        const bTime = b.createdAt?.seconds || 0;
-        return bTime - aTime;
-      });
-      setCertificates(certificatesData);
+      const { data, error } = await supabase
+        .from("my_certificate")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      setCertificates(data || []);
     } catch (error) {
       console.error("Error fetching certificates: ", error);
     } finally {
@@ -70,7 +56,6 @@ export default function AdminCertificates() {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     if (!file.type.startsWith("image/")) {
       alert("Hanya file gambar yang diizinkan (JPG, PNG, WebP, dll)");
       return;
@@ -79,7 +64,6 @@ export default function AdminCertificates() {
       alert("Ukuran file maksimal 5MB");
       return;
     }
-
     setSelectedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
   };
@@ -87,26 +71,21 @@ export default function AdminCertificates() {
   const uploadImageToCloudinary = async (file) => {
     setIsUploading(true);
     setUploadProgress(10);
-
     const formDataUpload = new FormData();
     formDataUpload.append("file", file);
     formDataUpload.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
     formDataUpload.append("folder", "certificates");
-
     try {
       setUploadProgress(30);
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
         { method: "POST", body: formDataUpload }
       );
-
       setUploadProgress(80);
-
       if (!response.ok) {
         const err = await response.json();
         throw new Error(err.error?.message || "Upload gagal");
       }
-
       const data = await response.json();
       setUploadProgress(100);
       setIsUploading(false);
@@ -121,31 +100,37 @@ export default function AdminCertificates() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
-      let imageUrl = formData.imageUrl;
-
+      let image_url = formData.image_url;
       if (selectedFile) {
-        imageUrl = await uploadImageToCloudinary(selectedFile);
+        image_url = await uploadImageToCloudinary(selectedFile);
       }
-
-      if (!imageUrl) {
+      if (!image_url) {
         alert("Harap upload gambar sertifikat terlebih dahulu.");
         setIsSubmitting(false);
         return;
       }
 
       const certificateData = {
-        ...formData,
-        imageUrl,
-        createdAt: editId ? formData.createdAt : serverTimestamp(),
-        updatedAt: serverTimestamp()
+        title: formData.title,
+        image_url,
+        course_url: formData.course_url,
+        category: formData.category,
+        updated_at: new Date().toISOString()
       };
 
       if (editId) {
-        await updateDoc(doc(db, "my-certificate", editId), certificateData);
+        const { error } = await supabase
+          .from("my_certificate")
+          .update(certificateData)
+          .eq("id", editId);
+        if (error) throw error;
       } else {
-        await addDoc(collection(db, "my-certificate"), certificateData);
+        certificateData.created_at = new Date().toISOString();
+        const { error } = await supabase
+          .from("my_certificate")
+          .insert([certificateData]);
+        if (error) throw error;
       }
 
       resetForm();
@@ -161,39 +146,31 @@ export default function AdminCertificates() {
 
   const handleEdit = (certificate) => {
     setFormData({
-      imageUrl: certificate.imageUrl,
+      image_url: certificate.image_url,
       title: certificate.title,
-      courseUrl: certificate.courseUrl,
+      course_url: certificate.course_url || "",
       category: certificate.category || "certificate",
-      createdAt: certificate.createdAt
     });
-    setPreviewUrl(certificate.imageUrl);
+    setPreviewUrl(certificate.image_url);
     setSelectedFile(null);
     setEditId(certificate.id);
     openModal();
   };
 
   const openModal = () => setIsModalOpen(true);
+  const closeModal = () => { setIsModalOpen(false); resetForm(); };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    resetForm();
-  };
-
-  const openDeleteModal = (id) => {
-    setCertificateToDelete(id);
-    setDeleteModalOpen(true);
-  };
-
-  const closeDeleteModal = () => {
-    setDeleteModalOpen(false);
-    setCertificateToDelete(null);
-  };
+  const openDeleteModal = (id) => { setCertificateToDelete(id); setDeleteModalOpen(true); };
+  const closeDeleteModal = () => { setDeleteModalOpen(false); setCertificateToDelete(null); };
 
   const handleDelete = async () => {
     if (certificateToDelete) {
       try {
-        await deleteDoc(doc(db, "my-certificate", certificateToDelete));
+        const { error } = await supabase
+          .from("my_certificate")
+          .delete()
+          .eq("id", certificateToDelete);
+        if (error) throw error;
         fetchCertificates();
       } catch (error) {
         console.error("Error deleting certificate: ", error);
@@ -204,12 +181,7 @@ export default function AdminCertificates() {
   };
 
   const resetForm = () => {
-    setFormData({
-      imageUrl: "",
-      title: "",
-      courseUrl: "",
-      category: "certificate"
-    });
+    setFormData({ image_url: "", title: "", course_url: "", category: "certificate" });
     setSelectedFile(null);
     setPreviewUrl("");
     setUploadProgress(0);
@@ -222,12 +194,7 @@ export default function AdminCertificates() {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-full mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <button
-              onClick={openModal}
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-            >
-              Add New Certificate
-            </button>
+            <button onClick={openModal} className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Add New Certificate</button>
           </div>
 
           {loading ? (
@@ -239,10 +206,10 @@ export default function AdminCertificates() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preview</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Earned</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preview</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Earned</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -250,12 +217,7 @@ export default function AdminCertificates() {
                     <tr key={certificate.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex-shrink-0 h-16 w-16">
-                          <img
-                            className="h-16 w-16 object-contain rounded-md"
-                            src={certificate.imageUrl}
-                            alt={certificate.title}
-                            onError={(e) => { e.target.src = 'https://via.placeholder.com/100'; }}
-                          />
+                          <img className="h-16 w-16 object-contain rounded-md" src={certificate.image_url} alt={certificate.title} onError={(e) => { e.target.src = 'https://via.placeholder.com/100'; }} />
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -277,162 +239,56 @@ export default function AdminCertificates() {
         </div>
 
         {/* Add/Edit Modal */}
-        <Modal
-          isOpen={isModalOpen}
-          onRequestClose={closeModal}
-          contentLabel={editId ? "Edit Certificate" : "Add Certificate"}
-          className="modal"
-          overlayClassName="modal-overlay"
-        >
+        <Modal isOpen={isModalOpen} onRequestClose={closeModal} contentLabel={editId ? "Edit Certificate" : "Add Certificate"} className="modal" overlayClassName="modal-overlay">
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-auto">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">
-                {editId ? "Edit Certificate" : "Add New Certificate"}
-              </h2>
+              <h2 className="text-xl font-semibold">{editId ? "Edit Certificate" : "Add New Certificate"}</h2>
               <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
-
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
-
-                {/* Title */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Title*</label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-2 bg-white text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                    placeholder="Earned..."
-                  />
+                  <input type="text" name="title" value={formData.title} onChange={handleInputChange} required className="w-full px-4 py-2 bg-white text-gray-800 border border-gray-300 rounded-md" placeholder="Earned..." />
                 </div>
-
-                {/* Upload Gambar Sertifikat */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Upload Gambar Sertifikat*
-                  </label>
-
-                  <div
-                    onClick={() => fileInputRef.current.click()}
-                    className="w-full border-2 border-dashed border-gray-300 rounded-md p-4 flex flex-col items-center justify-center cursor-pointer hover:border-gray-500 hover:bg-gray-50 transition-colors"
-                    style={{ minHeight: "130px" }}
-                  >
-                    {previewUrl ? (
-                      <img
-                        src={previewUrl}
-                        alt="Preview"
-                        className="max-h-28 object-contain rounded-md"
-                      />
-                    ) : (
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Upload Gambar Sertifikat*</label>
+                  <div onClick={() => fileInputRef.current.click()} className="w-full border-2 border-dashed border-gray-300 rounded-md p-4 flex flex-col items-center justify-center cursor-pointer hover:border-gray-500 hover:bg-gray-50 transition-colors" style={{ minHeight: "130px" }}>
+                    {previewUrl ? (<img src={previewUrl} alt="Preview" className="max-h-28 object-contain rounded-md" />) : (
                       <>
-                        <svg className="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+                        <svg className="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         <p className="text-sm text-gray-500 font-medium">Klik untuk pilih gambar</p>
                         <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP · Maks 5MB</p>
                       </>
                     )}
                   </div>
-
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-
-                  {selectedFile && (
-                    <p className="text-xs text-gray-500 mt-1 truncate">📎 {selectedFile.name}</p>
-                  )}
-
-                  {previewUrl && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedFile(null);
-                        setPreviewUrl(editId ? formData.imageUrl : "");
-                        if (fileInputRef.current) fileInputRef.current.value = "";
-                      }}
-                      className="text-xs text-red-400 underline mt-1 hover:text-red-600"
-                    >
-                      {selectedFile ? "Batalkan pilihan" : "Ganti gambar"}
-                    </button>
-                  )}
-
-                  {/* Progress bar upload */}
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                   {isUploading && (
                     <div className="mt-2">
-                      <div className="flex justify-between text-xs text-gray-500 mb-1">
-                        <span>Mengupload ke Cloudinary...</span>
-                        <span>{uploadProgress}%</span>
-                      </div>
                       <div className="w-full bg-gray-200 rounded-full h-1.5">
-                        <div
-                          className="bg-gray-600 h-1.5 rounded-full transition-all duration-300"
-                          style={{ width: `${uploadProgress}%` }}
-                        />
+                        <div className="bg-gray-600 h-1.5 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
                       </div>
                     </div>
                   )}
                 </div>
-
-                {/* Course URL */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Course URL</label>
-                  <input
-                    type="url"
-                    name="courseUrl"
-                    value={formData.courseUrl}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 bg-white text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                    placeholder="https://example.com/course"
-                  />
+                  <input type="url" name="course_url" value={formData.course_url} onChange={handleInputChange} className="w-full px-4 py-2 bg-white text-gray-800 border border-gray-300 rounded-md" placeholder="https://example.com/course" />
                 </div>
-
-                {/* Category */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Category*</label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-2 bg-white text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  >
+                  <select name="category" value={formData.category} onChange={handleInputChange} required className="w-full px-4 py-2 bg-white text-gray-800 border border-gray-300 rounded-md">
                     <option value="certificate">Certificate</option>
                     <option value="badge">Badge</option>
                   </select>
                 </div>
               </div>
-
               <div className="mt-6 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="px-4 py-2 border bg-white text-gray-800 border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || isUploading}
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50"
-                >
-                  {isUploading
-                    ? `Uploading... ${uploadProgress}%`
-                    : isSubmitting
-                    ? "Menyimpan..."
-                    : editId
-                    ? "Update Certificate"
-                    : "Add Certificate"}
+                <button type="button" onClick={closeModal} className="px-4 py-2 border bg-white text-gray-800 border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50">Cancel</button>
+                <button type="submit" disabled={isSubmitting || isUploading} className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 disabled:opacity-50">
+                  {isUploading ? `Uploading... ${uploadProgress}%` : isSubmitting ? "Menyimpan..." : editId ? "Update Certificate" : "Add Certificate"}
                 </button>
               </div>
             </form>
@@ -440,22 +296,9 @@ export default function AdminCertificates() {
         </Modal>
 
         {/* Delete Modal */}
-        <Modal
-          isOpen={deleteModalOpen}
-          onRequestClose={closeDeleteModal}
-          contentLabel="Delete Confirmation"
-          className="modal"
-          overlayClassName="modal-overlay"
-        >
+        <Modal isOpen={deleteModalOpen} onRequestClose={closeDeleteModal} contentLabel="Delete Confirmation" className="modal" overlayClassName="modal-overlay">
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-red-600">Delete Certificate</h2>
-              <button onClick={closeDeleteModal} className="text-gray-500 hover:text-gray-700">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+            <h2 className="text-xl font-semibold text-red-600 mb-4">Delete Certificate</h2>
             <p className="mb-6 text-gray-800">Are you sure you want to delete this certificate? This action cannot be undone.</p>
             <div className="flex justify-end gap-3">
               <button onClick={closeDeleteModal} className="px-4 py-2 border bg-white text-gray-800 border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50">Cancel</button>
@@ -465,27 +308,8 @@ export default function AdminCertificates() {
         </Modal>
 
         <style>{`
-          .modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            right: auto;
-            bottom: auto;
-            margin-right: -50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            max-width: 500px;
-            outline: none;
-          }
-          .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-          }
+          .modal { position: fixed; top: 50%; left: 50%; right: auto; bottom: auto; margin-right: -50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; outline: none; }
+          .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; }
         `}</style>
       </div>
     </Layout>

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../firebase";
+import { supabase } from "../../supabase";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
@@ -16,10 +15,14 @@ export default function Login() {
     setLoading(true);
     setError("");
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (authError) throw authError;
       navigate("/dashboard");
-    } catch {
-      setError("Email atau password salah.");
+    } catch (err) {
+      setError(err.message || "Email atau password salah.");
       setLoading(false);
     }
   };

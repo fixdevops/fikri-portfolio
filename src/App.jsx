@@ -32,7 +32,7 @@ import ManageAudio from './pages/admin/ManageAudio';
 
 function App() {
   return (
-    <Router basename="/vikri">
+    <Router>
       <Routes>
 
         {/* ── Main Routes ───────────────── */}

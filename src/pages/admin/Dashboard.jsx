@@ -1,18 +1,17 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../../components/Layout";
 import { Link } from "react-router-dom";
-import { db } from "../../firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { supabase } from "../../supabase";
 
 // Define the dashboard sections with their details
 const dashboardSections = [
-  { label: "Animes", path: "/dashboard/manage-animes", collectionName: "animes", icon: "🎬" },
-  { label: "Anime Reels", path: "/dashboard/animes/manage-reels", collectionName: "anime-story", icon: "🎞️" },
-  { label: "Projects", path: "/dashboard/frontdev/manage-projects", collectionName: "my-project", icon: "💡" },
-  { label: "Certificates", path: "/dashboard/frontdev/manage-certificates", collectionName: "my-certificate", icon: "📄" },
-  { label: "Blogs", path: "/dashboard/frontdev/manage-blogs", collectionName: "my-blogs", icon: "✍️" },
-  { label: "Quotes", path: "/dashboard/creator/manage-quotes", collectionName: "my-quotes", icon: "💬" },
-  { label: "Audio", path: "/dashboard/creator/manage-audio", collectionName: "my-audios", icon: "🎧" },
+  { label: "Animes", path: "/dashboard/manage-animes", tableName: "animes", icon: "🎬" },
+  { label: "Anime Reels", path: "/dashboard/animes/manage-reels", tableName: "anime_story", icon: "🎞️" },
+  { label: "Projects", path: "/dashboard/frontdev/manage-projects", tableName: "my_project", icon: "💡" },
+  { label: "Certificates", path: "/dashboard/frontdev/manage-certificates", tableName: "my_certificate", icon: "📄" },
+  { label: "Blogs", path: "/dashboard/frontdev/manage-blogs", tableName: "my_blogs", icon: "✍️" },
+  { label: "Quotes", path: "/dashboard/creator/manage-quotes", tableName: "my_quotes", icon: "💬" },
+  { label: "Audio", path: "/dashboard/creator/manage-audio", tableName: "my_audios", icon: "🎧" },
 ];
 
 export default function Dashboard() {
@@ -27,12 +26,15 @@ export default function Dashboard() {
       const newStats = {};
       for (const item of dashboardSections) {
         try {
-          const snapshot = await getDocs(collection(db, item.collectionName));
-          newStats[item.collectionName] = snapshot.size;
+          const { count, error: countError } = await supabase
+            .from(item.tableName)
+            .select("*", { count: "exact", head: true });
+          if (countError) throw countError;
+          newStats[item.tableName] = count;
         } catch (err) {
-          console.error(`Gagal mengambil data untuk ${item.collectionName}:`, err);
+          console.error(`Gagal mengambil data untuk ${item.tableName}:`, err);
           setError("Gagal memuat beberapa data dashboard. Silakan coba lagi.");
-          newStats[item.collectionName] = 0; // Setel ke 0 atau 'N/A' saat error
+          newStats[item.tableName] = 0;
         }
       }
       setStats(newStats);
@@ -40,7 +42,7 @@ export default function Dashboard() {
     };
 
     fetchStats();
-  }, []); // Array dependensi kosong memastikan ini berjalan sekali saat komponen dimuat
+  }, []);
 
   return (
     <Layout>
@@ -52,7 +54,7 @@ export default function Dashboard() {
           <div className="flex flex-wrap gap-4 justify-start">
             {dashboardSections.map((item) => (
               <Link
-                key={item.collectionName}
+                key={item.tableName}
                 to={item.path}
                 className="flex items-center space-x-2 px-4 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full hover:bg-indigo-100 hover:border-indigo-400 transition-all duration-200 text-sm font-medium"
               >
@@ -86,7 +88,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
               {dashboardSections.map((item) => (
                 <div
-                  key={item.collectionName}
+                  key={item.tableName}
                   className="bg-white border border-gray-200 p-6 rounded-lg flex flex-col items-start space-y-3 shadow-sm"
                 >
                   <div className="text-4xl mb-2">{item.icon}</div>
@@ -96,7 +98,7 @@ export default function Dashboard() {
                   <p className="text-md text-gray-600">
                     Total Item:{" "}
                     <span className="font-bold text-indigo-700">
-                      {stats[item.collectionName] !== undefined ? stats[item.collectionName] : "N/A"}
+                      {stats[item.tableName] !== undefined ? stats[item.tableName] : "N/A"}
                     </span>
                   </p>
                 </div>
@@ -105,20 +107,16 @@ export default function Dashboard() {
 
             {/* Analytics and Recent Activities Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Analytics Overview */}
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">Ringkasan Analitik</h2>
                 <div className="w-full h-48 bg-gray-100 rounded-md flex items-center justify-center text-gray-500 border border-dashed border-gray-300">
-                  {/* Ini adalah placeholder untuk grafik */}
                   <p>Placeholder Grafik (misalnya, Grafik Kunjungan Halaman)</p>
                 </div>
                 <p className="text-gray-600 mt-4 text-sm">
                   Data analitik akan ditampilkan di sini untuk memberikan wawasan tentang kinerja situs atau aplikasi Anda.
-                  Anda dapat mengintegrasikan pustaka grafik seperti Chart.js atau Recharts di sini.
                 </p>
               </div>
 
-              {/* Recent Activities */}
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">Aktivitas Terbaru</h2>
                 <ul className="divide-y divide-gray-200">
@@ -139,7 +137,7 @@ export default function Dashboard() {
                   </li>
                 </ul>
                 <p className="text-gray-600 mt-4 text-sm">
-                  Bagian ini dapat menampilkan log aktivitas terbaru seperti penambahan/pengeditan konten, login pengguna, dll.
+                  Bagian ini dapat menampilkan log aktivitas terbaru.
                 </p>
               </div>
             </div>

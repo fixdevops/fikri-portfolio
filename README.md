@@ -1,58 +1,75 @@
-# NewPortoFixz
+# Fikri Asyam Portfolio
 
-Frontend React (Vite) dengan backend Node.js (Express).
+Frontend React (Vite) dengan backend Supabase.
 
 ## Stack
 
-- Frontend: React + Vite + Tailwind
-- Backend: Express + JWT + file-based JSON DB (`backend/src/data/db.json`)
+- Frontend: React + Vite + Tailwind CSS
+- Backend: Supabase (PostgreSQL + Auth + Realtime)
+- Image Upload: Cloudinary
+- Comments: Giscus (GitHub Discussions)
 
 ## Menjalankan Lokal
 
-1. Install dependency frontend:
+1. Install dependency:
 
 ```bash
 npm install
 ```
 
-2. Install dependency backend:
+2. Setup Supabase:
 
-```bash
-npm --prefix backend install
-```
+   - Buat project di [supabase.com](https://supabase.com)
+   - Jalankan SQL dari `supabase-setup.sql` di SQL Editor
+   - Buat akun admin di Authentication > Users
+   - Lihat panduan lengkap di `SUPABASE_SETUP.md`
 
-3. Salin env:
+3. Salin dan isi environment variables:
 
 ```bash
 cp .env.example .env
-cp backend/.env.example backend/.env
 ```
 
-4. Jalankan backend:
+Isi `.env` dengan URL dan Key dari Supabase Dashboard (Settings > API):
 
-```bash
-npm run dev:api
+```env
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
-5. Jalankan frontend (terminal lain):
+4. Jalankan project:
 
 ```bash
 npm run dev
 ```
 
-Frontend: `http://localhost:6565`  
-Backend API: `http://localhost:3000/api`
+Frontend: `http://localhost:6565`
 
-## Login Admin Default
+## Login Admin
 
-Diset dari `backend/.env`:
+Buat akun admin di Supabase Dashboard:
+1. Buka **Authentication** > **Users**
+2. Klik **Add User** > **Create New User**
+3. Masukkan email dan password
+4. Gunakan untuk login di `/login`
 
-- `ADMIN_EMAIL` (default `admin@example.com`)
-- `ADMIN_PASSWORD` (default `admin123`)
+## Fitur
 
-Akun admin otomatis dibuat saat backend pertama kali start jika database masih kosong.
+- 🏠 Homepage dengan profile, projects, certificates, dan blog
+- 📁 Manage Projects (CRUD)
+- 📄 Manage Certificates (CRUD + Cloudinary upload)
+- ✍️ Manage Blogs (CRUD + Markdown editor)
+- 🎬 Manage Animes & Reels (CRUD)
+- 💬 Manage Quotes (CRUD + status management)
+- 🎧 Manage Audio Library (CRUD)
+- 💬 Real-time Chat Room (Supabase Realtime + Google OAuth)
+- 📝 Guestbook (Giscus - GitHub Discussions)
+- 🔒 Protected Admin Dashboard
 
-## Catatan
+## Deployment (Vercel)
 
-- Frontend sekarang memakai shim `firebase/*` lokal (`src/shims`) yang mengarah ke API Node.js.
-- Data persisten disimpan di `backend/src/data/db.json`.
+```bash
+npm run build
+```
+
+Project sudah dikonfigurasi untuk deploy ke Vercel dengan `vercel.json`.

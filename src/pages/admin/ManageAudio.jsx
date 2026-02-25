@@ -1,384 +1,220 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, updateDoc } from 'firebase/firestore';
-import { db } from '../../firebase';
-import { Link } from 'react-router-dom';
+import { supabase } from '../../supabase';
 import Layout from '../../components/Layout';
 
 export default function ManageAudio() {
-    const [audios, setAudios] = useState([]);
-    const [filteredAudios, setFilteredAudios] = useState([]);
-    const [newAudio, setNewAudio] = useState({
-        title: '',
-        audioUrl: '',
-        category: 'quote_random'
-    });
-    const [editingId, setEditingId] = useState(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [categoryCounts, setCategoryCounts] = useState({});
-    const [activeFilter, setActiveFilter] = useState('all');
+  const [audios, setAudios] = useState([]);
+  const [filteredAudios, setFilteredAudios] = useState([]);
+  const [newAudio, setNewAudio] = useState({
+    title: '',
+    audio_url: '',
+    category: 'quote_random'
+  });
+  const [editingId, setEditingId] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categoryCounts, setCategoryCounts] = useState({});
+  const [activeFilter, setActiveFilter] = useState('all');
 
-    useEffect(() => {
-        const fetchAudios = async () => {
-            try {
-                const q = query(collection(db, 'my-audios'), orderBy('createdAt', 'desc'));
-                const querySnapshot = await getDocs(q);
-                const audioList = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-                setAudios(audioList);
-                setFilteredAudios(audioList);
+  useEffect(() => {
+    fetchAudios();
+  }, []);
 
-                // Calculate category counts
-                const counts = { all: audioList.length };
-                audioList.forEach(audio => {
-                    counts[audio.category] = (counts[audio.category] || 0) + 1;
-                });
-                setCategoryCounts(counts);
-            } catch (error) {
-                console.error('Error fetching audios:', error);
-            }
-        };
+  const fetchAudios = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('my_audios')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
 
-        fetchAudios();
-    }, []);
+      const audioList = data || [];
+      setAudios(audioList);
+      setFilteredAudios(audioList);
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setNewAudio(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
+      const counts = { all: audioList.length };
+      audioList.forEach(audio => {
+        counts[audio.category] = (counts[audio.category] || 0) + 1;
+      });
+      setCategoryCounts(counts);
+    } catch (error) {
+      console.error('Error fetching audios:', error);
+    }
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsSubmitting(true);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewAudio(prev => ({ ...prev, [name]: value }));
+  };
 
-        if (!newAudio.title || !newAudio.audioUrl) {
-            alert('Please fill all required fields');
-            setIsSubmitting(false);
-            return;
-        }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
-        try {
-            if (editingId) {
-                // Update existing audio
-                await updateDoc(doc(db, 'my-audios', editingId), {
-                    ...newAudio,
-                    updatedAt: new Date()
-                });
-                setEditingId(null);
-            } else {
-                // Add new audio
-                await addDoc(collection(db, 'my-audios'), {
-                    ...newAudio,
-                    createdAt: new Date()
-                });
-            }
+    if (!newAudio.title || !newAudio.audio_url) {
+      alert('Please fill all required fields');
+      setIsSubmitting(false);
+      return;
+    }
 
-            // Refresh the list
-            const q = query(collection(db, 'my-audios'), orderBy('createdAt', 'desc'));
-            const querySnapshot = await getDocs(q);
-            const audioList = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setAudios(audioList);
-            applyFilter(activeFilter, audioList);
-
-            // Update category counts
-            const counts = { all: audioList.length };
-            audioList.forEach(audio => {
-                counts[audio.category] = (counts[audio.category] || 0) + 1;
-            });
-            setCategoryCounts(counts);
-
-            // Reset form
-            setNewAudio({
-                title: '',
-                audioUrl: '',
-                category: 'quote_random'
-            });
-        } catch (error) {
-            console.error('Error saving audio:', error);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleEdit = (audio) => {
-        setNewAudio({
-            title: audio.title,
-            audioUrl: audio.audioUrl,
-            category: audio.category
-        });
-        setEditingId(audio.id);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    const handleCancelEdit = () => {
-        setNewAudio({
-            title: '',
-            audioUrl: '',
-            category: 'quote_random'
-        });
+    try {
+      if (editingId) {
+        const { error } = await supabase
+          .from('my_audios')
+          .update({ ...newAudio, updated_at: new Date().toISOString() })
+          .eq('id', editingId);
+        if (error) throw error;
         setEditingId(null);
-    };
+      } else {
+        const { error } = await supabase
+          .from('my_audios')
+          .insert([{ ...newAudio, created_at: new Date().toISOString() }]);
+        if (error) throw error;
+      }
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this audio?')) {
-            try {
-                await deleteDoc(doc(db, 'my-audios', id));
-                const updatedAudios = audios.filter(audio => audio.id !== id);
-                setAudios(updatedAudios);
-                applyFilter(activeFilter, updatedAudios);
+      await fetchAudios();
+      setNewAudio({ title: '', audio_url: '', category: 'quote_random' });
+    } catch (error) {
+      console.error('Error saving audio:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-                // Update category counts
-                const counts = { all: updatedAudios.length };
-                updatedAudios.forEach(audio => {
-                    counts[audio.category] = (counts[audio.category] || 0) + 1;
-                });
-                setCategoryCounts(counts);
-            } catch (error) {
-                console.error('Error deleting audio:', error);
-            }
-        }
-    };
+  const handleEdit = (audio) => {
+    setNewAudio({
+      title: audio.title,
+      audio_url: audio.audio_url,
+      category: audio.category
+    });
+    setEditingId(audio.id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-    const formatCategory = (category) => {
-        return category.split('_').map(word =>
-            word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(' ');
-    };
+  const handleCancelEdit = () => {
+    setNewAudio({ title: '', audio_url: '', category: 'quote_random' });
+    setEditingId(null);
+  };
 
-    const applyFilter = (category, audioList = audios) => {
-        setActiveFilter(category);
-        if (category === 'all') {
-            setFilteredAudios(audioList);
-        } else {
-            setFilteredAudios(audioList.filter(audio => audio.category === category));
-        }
-    };
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this audio?')) {
+      try {
+        const { error } = await supabase.from('my_audios').delete().eq('id', id);
+        if (error) throw error;
+        await fetchAudios();
+      } catch (error) {
+        console.error('Error deleting audio:', error);
+      }
+    }
+  };
 
-    const renderCategoryCounts = () => {
-        return (
-            <div className="flex flex-wrap gap-2">
-                <button
-                    onClick={() => applyFilter('all')}
-                    className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${activeFilter === 'all'
-                            ? 'bg-gray-800 text-white'
-                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                        }`}
-                >
-                    All: {categoryCounts.all || 0}
+  const formatCategory = (category) => {
+    return category.split('_').map(word =>
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
+  const applyFilter = (category) => {
+    setActiveFilter(category);
+    if (category === 'all') {
+      setFilteredAudios(audios);
+    } else {
+      setFilteredAudios(audios.filter(audio => audio.category === category));
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'N/A';
+    return new Date(dateStr).toLocaleDateString();
+  };
+
+  return (
+    <Layout>
+      <div className="min-h-screen">
+        <div className="max-w-full mx-auto">
+          <form onSubmit={handleSubmit}>
+            <div className="flex flex-wrap items-end gap-4 mb-4">
+              <div className="w-[200px]">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title <span className="text-red-500">*</span></label>
+                <input type="text" name="title" value={newAudio.title} onChange={handleInputChange} className="w-full px-3 py-2 bg-white text-gray-800 border border-gray-300 rounded-lg" required placeholder="Title" />
+              </div>
+              <div className="w-[160px]">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category <span className="text-red-500">*</span></label>
+                <select name="category" value={newAudio.category} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-800" required>
+                  <option value="sound_efect">Sound Efect</option>
+                  <option value="quote_random">Quote Random</option>
+                  <option value="arabic">Arabic</option>
+                  <option value="islamic">Islamic</option>
+                  <option value="jawa">Song Jawa</option>
+                  <option value="india">India</option>
+                </select>
+              </div>
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Audio URL <span className="text-red-500">*</span></label>
+                <input type="url" name="audio_url" value={newAudio.audio_url} onChange={handleInputChange} placeholder="https://example.com/audio.mp3" className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-800" required />
+              </div>
+              <div className="flex gap-2 w-[260px]">
+                {editingId && (
+                  <button type="button" onClick={handleCancelEdit} className="w-full h-[42px] bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300">Cancel</button>
+                )}
+                <button type="submit" disabled={isSubmitting} className="w-full h-[42px] text-white font-medium rounded-lg bg-gray-600 hover:bg-gray-700 disabled:opacity-70">
+                  {isSubmitting ? (editingId ? 'Updating...' : 'Adding...') : (editingId ? 'Update Audio' : 'Add Audio')}
                 </button>
-                {Object.entries(categoryCounts)
-                    .filter(([key]) => key !== 'all')
-                    .map(([category, count]) => (
-                        <button
-                            key={category}
-                            onClick={() => applyFilter(category)}
-                            className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${activeFilter === category
-                                    ? 'bg-gray-800 text-white'
-                                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                                }`}
-                        >
-                            {formatCategory(category)}: {count}
-                        </button>
-                    ))}
+              </div>
             </div>
-        );
-    };
+          </form>
 
-    return (
-        <Layout>
-            <div className="min-h-screen">
-                <div className="max-w-full mx-auto">
-                    <form onSubmit={handleSubmit}>
-                        <div className="flex flex-wrap items-end gap-4 mb-4">
-                            {/* Title */}
-                            <div className="w-[200px]">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Title <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    name="title"
-                                    value={newAudio.title}
-                                    onChange={handleInputChange}
-                                    className="w-full px-3 py-2 bg-white text-gray-800 border border-gray-300 rounded-lg"
-                                    required
-                                    placeholder="Title"
-                                />
-                            </div>
-
-                            {/* Category */}
-                            <div className="w-[160px]">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Category <span className="text-red-500">*</span>
-                                </label>
-                                <div className="relative">
-                                    <select
-                                        name="category"
-                                        value={newAudio.category}
-                                        onChange={handleInputChange}
-                                        className="w-full appearance-none px-3 py-2 pr-8 border border-gray-300 rounded-lg bg-white text-gray-800"
-                                        required
-                                    >
-                                        <option value="sound_efect">Sound Efect</option>
-                                        <option value="quote_random">Quote Random</option>
-                                        <option value="arabic">Arabic</option>
-                                        <option value="islamic">Islamic</option>
-                                        <option value="jawa">Song Jawa</option>
-                                        <option value="india">India</option>
-                                    </select>
-                                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-500">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Audio URL */}
-                            <div className="flex-1 min-w-[200px]">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Audio URL <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="url"
-                                    name="audioUrl"
-                                    value={newAudio.audioUrl}
-                                    onChange={handleInputChange}
-                                    placeholder="https://example.com/audio.mp3"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-800"
-                                    required
-                                />
-                            </div>
-
-                            {/* Submit/Cancel Buttons */}
-                            <div className="flex gap-2 w-[260px]">
-                                {editingId && (
-                                    <button
-                                        type="button"
-                                        onClick={handleCancelEdit}
-                                        className="w-full h-[42px] bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                )}
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className={`w-full h-[42px] text-white font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-70 transition-colors ${editingId ? 'bg-gray-600 hover:bg-gray-700 focus:ring-gray-500' : 'bg-gray-600 hover:bg-gray-700 focus:ring-gray-500'
-                                        }`}
-                                >
-                                    {isSubmitting ? (
-                                        <span className="flex items-center justify-center">
-                                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            {editingId ? 'Updating...' : 'Adding...'}
-                                        </span>
-                                    ) : (
-                                        editingId ? 'Update Audio' : 'Add Audio'
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-
-                    </form>
-
-                    {/* Audio List */}
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-semibold text-gray-800">List Audio Library</h2>
-                        {renderCategoryCounts()}
-                    </div>
-
-                    {filteredAudios.length > 0 ? (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Title
-                                        </th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Category
-                                        </th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Date Added
-                                        </th>
-                                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {filteredAudios.map(audio => (
-                                        <tr key={audio.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900 truncate max-w-xs">
-                                                    {audio.title}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                                    {formatCategory(audio.category)}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {audio.createdAt?.toDate ? audio.createdAt.toDate().toLocaleDateString() : 'N/A'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <div className="flex justify-end space-x-4">
-                                                    <a
-                                                        href={audio.audioUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-gray-600 hover:text-gray-900"
-                                                        title="Preview"
-                                                    >
-                                                        <i className="ri-external-link-line text-lg"></i>
-                                                    </a>
-                                                    <button
-                                                        onClick={() => handleEdit(audio)}
-                                                        className="text-gray-600 hover:text-gray-900"
-                                                        title="Edit"
-                                                    >
-                                                        <i className="ri-pencil-line text-lg"></i>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(audio.id)}
-                                                        className="text-red-600 hover:text-red-900"
-                                                        title="Delete"
-                                                    >
-                                                        <i className="ri-delete-bin-line text-lg"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (
-                        <div className="text-center py-12">
-                            <div className="mx-auto h-16 w-16 text-gray-400 mb-4">
-                                <i className="ri-music-2-line text-4xl"></i>
-                            </div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-1">
-                                {activeFilter === 'all'
-                                    ? 'No audios found'
-                                    : `No audios in ${formatCategory(activeFilter)} category`}
-                            </h3>
-                            <p className="text-gray-500">Add your first audio using the form above</p>
-                        </div>
-                    )}
-                </div>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold text-gray-800">List Audio Library</h2>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => applyFilter('all')} className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${activeFilter === 'all' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>
+                All: {categoryCounts.all || 0}
+              </button>
+              {Object.entries(categoryCounts).filter(([key]) => key !== 'all').map(([category, count]) => (
+                <button key={category} onClick={() => applyFilter(category)} className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${activeFilter === category ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>
+                  {formatCategory(category)}: {count}
+                </button>
+              ))}
             </div>
-        </Layout>
-    );
+          </div>
+
+          {filteredAudios.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Added</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredAudios.map(audio => (
+                    <tr key={audio.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm font-medium text-gray-900 truncate max-w-xs">{audio.title}</div></td>
+                      <td className="px-6 py-4 whitespace-nowrap"><span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{formatCategory(audio.category)}</span></td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(audio.created_at)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end space-x-4">
+                          <a href={audio.audio_url} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900" title="Preview"><i className="ri-external-link-line text-lg"></i></a>
+                          <button onClick={() => handleEdit(audio)} className="text-gray-600 hover:text-gray-900" title="Edit"><i className="ri-pencil-line text-lg"></i></button>
+                          <button onClick={() => handleDelete(audio.id)} className="text-red-600 hover:text-red-900" title="Delete"><i className="ri-delete-bin-line text-lg"></i></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <i className="ri-music-2-line text-4xl text-gray-400"></i>
+              <h3 className="text-lg font-medium text-gray-900 mb-1">{activeFilter === 'all' ? 'No audios found' : `No audios in ${formatCategory(activeFilter)} category`}</h3>
+              <p className="text-gray-500">Add your first audio using the form above</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </Layout>
+  );
 }
