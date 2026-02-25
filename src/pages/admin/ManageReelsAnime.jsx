@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../supabase';
 import Modal from 'react-modal';
 import Layout from '../../components/Layout';
@@ -20,7 +20,7 @@ export default function DashboardStoryAnime() {
     thumbnail: ''
   });
   const [editId, setEditId] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm] = useState('');
 
   const allHastags = [
     { id: 'alya', name: 'Alya' }, { id: 'yuki', name: 'Yuki' },
@@ -38,11 +38,7 @@ export default function DashboardStoryAnime() {
     { id: 'quote', name: 'Quotes' }
   ];
 
-  useEffect(() => {
-    fetchStories();
-  }, [searchTerm]);
-
-  const fetchStories = async () => {
+  const fetchStories = useCallback(async () => {
     try {
       setLoading(true);
       let query = supabase
@@ -62,7 +58,11 @@ export default function DashboardStoryAnime() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm]);
+
+  useEffect(() => {
+    fetchStories();
+  }, [fetchStories]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

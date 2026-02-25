@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../supabase';
 
 export default function ChatRoomComponents() {
@@ -94,11 +94,11 @@ export default function ChatRoomComponents() {
     };
 
     // Format tanggal menjadi "18 Juli 2025"
-    const formatFullDate = (dateStr) => {
+    const formatFullDate = useCallback((dateStr) => {
         if (!dateStr) return '';
         const options = { day: 'numeric', month: 'long', year: 'numeric' };
         return new Date(dateStr).toLocaleDateString('id-ID', options);
-    };
+    }, []);
 
     // Handle buka chat
     const handleOpenChat = () => {
@@ -113,7 +113,7 @@ export default function ChatRoomComponents() {
     };
 
     // Cek apakah tanggal berbeda untuk menambahkan header tanggal
-    const checkDateHeaders = (messages) => {
+    const checkDateHeaders = useCallback((messages) => {
         const headers = {};
         let currentDate = '';
         
@@ -126,10 +126,10 @@ export default function ChatRoomComponents() {
         });
         
         setDateHeaders(headers);
-    };
+    }, [formatFullDate]);
 
     // Fetch messages
-    const fetchMessages = async () => {
+    const fetchMessages = useCallback(async () => {
         try {
             const { data, error } = await supabase
                 .from('chat_messages')
@@ -141,7 +141,7 @@ export default function ChatRoomComponents() {
         } catch (error) {
             console.error('Error fetching messages:', error);
         }
-    };
+    }, [checkDateHeaders]);
 
     useEffect(() => {
         if (isOpen) {
@@ -154,7 +154,7 @@ export default function ChatRoomComponents() {
                 scrollToBottom();
             }
         }
-    }, [messages, isOpen]);
+    }, [messages, isOpen, lastSeenIndex]);
 
     // Subscribe to real-time changes using Supabase Realtime
     useEffect(() => {
@@ -174,7 +174,7 @@ export default function ChatRoomComponents() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, []);
+    }, [fetchMessages]);
 
     // Listen to auth state changes
     useEffect(() => {
