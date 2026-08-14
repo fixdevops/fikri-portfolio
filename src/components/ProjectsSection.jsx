@@ -59,74 +59,64 @@ export default function ProjectsSection() {
                 key={project.id}
                 className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow duration-200"
               >
-                <div className="flex flex-row">
-                  {/* Thumbnail — pojok kiri atas & bawah kotak (tidak melengkung) */}
-                  <div
-                    className="flex-shrink-0 bg-gray-100 overflow-hidden"
-                    style={{
-                      width: "160px",
-                      height: `${imgHeight}px`,
-                      borderRadius: "0",
-                    }}
-                  >
-                    <img
-                      src={project.thumbnail || "https://via.placeholder.com/300x200?text=No+Image"}
-                      alt={project.title}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: imgFit,
-                      }}
-                      onError={(e) => { e.target.src = "https://via.placeholder.com/300x200?text=No+Image"; }}
-                    />
+                {/* Thumbnail — full width di atas */}
+                <div
+                  className="w-full overflow-hidden bg-gray-100"
+                  style={{ height: `${imgHeight}px` }}
+                >
+                  <img
+                    src={project.thumbnail || "https://via.placeholder.com/300x200?text=No+Image"}
+                    alt={project.title}
+                    style={{ width: "100%", height: "100%", objectFit: imgFit }}
+                    onError={(e) => { e.target.src = "https://via.placeholder.com/300x200?text=No+Image"; }}
+                  />
+                </div>
+
+                {/* Content */}
+                <div className="flex flex-col p-3 gap-1">
+                  {/* Title + Visit */}
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-sm font-bold text-gray-800 leading-tight line-clamp-2 flex-1">
+                      {project.title}
+                    </h3>
+                    {project.link_preview && (
+                      <a
+                        href={project.link_preview}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex-shrink-0 flex items-center gap-1 text-xs border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 px-2 py-1 rounded-lg transition-colors"
+                      >
+                        <i className="ri-share-box-line text-xs"></i>
+                        <span>Visit</span>
+                      </a>
+                    )}
                   </div>
 
-                  {/* Content */}
-                  <div className="flex flex-col justify-between p-3 flex-1 min-w-0">
-                    {/* Title + Visit */}
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="text-sm font-bold text-gray-800 leading-tight line-clamp-2 flex-1">
-                        {project.title}
-                      </h3>
-                      {project.link_preview && (
-                        <a
-                          href={project.link_preview}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex-shrink-0 flex items-center gap-1 text-xs border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 px-2 py-1 rounded-lg transition-colors"
+                  {/* Description */}
+                  {project.description && (
+                    <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+                      {project.description}
+                    </p>
+                  )}
+
+                  {/* Tech stacks */}
+                  {project.tech_stacks && Array.isArray(project.tech_stacks) && project.tech_stacks.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {project.tech_stacks.slice(0, 4).map((tech, idx) => (
+                        <span
+                          key={idx}
+                          className="text-[10px] bg-white border border-gray-200 rounded px-1.5 py-0.5 text-gray-500 font-mono"
                         >
-                          <i className="ri-share-box-line text-xs"></i>
-                          <span>Visit</span>
-                        </a>
+                          #{tech}
+                        </span>
+                      ))}
+                      {project.tech_stacks.length > 4 && (
+                        <span className="text-[10px] text-gray-400 self-center">
+                          +{project.tech_stacks.length - 4} more
+                        </span>
                       )}
                     </div>
-
-                    {/* Description */}
-                    {project.description && (
-                      <p className="text-xs text-gray-500 line-clamp-2 mt-1 leading-relaxed">
-                        {project.description}
-                      </p>
-                    )}
-
-                    {/* Tech stacks */}
-                    {project.tech_stacks && Array.isArray(project.tech_stacks) && project.tech_stacks.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {project.tech_stacks.slice(0, 4).map((tech, idx) => (
-                          <span
-                            key={idx}
-                            className="text-[10px] bg-white border border-gray-200 rounded px-1.5 py-0.5 text-gray-500 font-mono"
-                          >
-                            #{tech}
-                          </span>
-                        ))}
-                        {project.tech_stacks.length > 4 && (
-                          <span className="text-[10px] text-gray-400 self-center">
-                            +{project.tech_stacks.length - 4} more
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
             );
