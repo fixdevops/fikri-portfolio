@@ -30,60 +30,89 @@ export default function ProjectsSection() {
 
   return (
     <div>
-      <div className="flex justify-between items-center w-full">
+      {/* Header */}
+      <div className="flex justify-between items-center w-full mb-4">
         <h2 className="text-[18px] font-bold text-gray-800 flex items-center gap-2">
           <i className="ri-tools-fill"></i> Featured Projects
         </h2>
         <Link to="/projects" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
           View more
         </Link>
-      </div> <br />
+      </div>
 
       {loading ? (
         <div className="flex justify-center p-4">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
         </div>
       ) : projects.length === 0 ? (
-        <div className="text-center py-8 bg-white border border-gray-200 rounded-lg text-gray-500">
+        <div className="text-center py-8 bg-white border border-gray-200 rounded-lg text-gray-500 text-sm">
           No pinned projects. Pin projects from the admin panel.
         </div>
       ) : (
-        <div className="grid gap-2">
+        <div className="flex flex-col gap-3">
           {projects.map((project) => (
-            <div key={project.id} className="border border-gray-200 bg-white rounded-xl sm:flex items-center transition-all hover:shadow-md mb-2">
-              <div className="p-2 sm:w-1/3">
-                <img
-                  src={project.thumbnail || "https://via.placeholder.com/300x200?text=No+Thumbnail"}
-                  alt={project.title}
-                  className="w-full h-32 object-cover border border-gray-200 rounded-lg"
-                />
-              </div>
-              <div className="p-3 w-full sm:w-2/3">
-                <div className="flex justify-between items-center">
-                  <h1 className="text-[18px] text-gray-800 font-black truncate">{project.title}</h1>
-                  {project.link_preview && (
-                    <a
-                      target="_blank"
-                      href={project.link_preview || "#"}
-                      rel="noreferrer"
-                      className="border border-gray-200 bg-white hover:bg-gray-100 duration-200 px-3 py-1 flex items-center rounded-lg text-gray-800 gap-2 text-sm"
-                    >
-                      <i className="ri-share-box-line" /> Visit
-                    </a>
+            <div
+              key={project.id}
+              className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow duration-200"
+            >
+              <div className="flex flex-row">
+                {/* Thumbnail */}
+                <div className="w-28 sm:w-36 flex-shrink-0">
+                  <img
+                    src={project.thumbnail || "https://via.placeholder.com/300x200?text=No+Image"}
+                    alt={project.title}
+                    className="w-full h-full object-cover"
+                    style={{ minHeight: "100px", maxHeight: "130px" }}
+                    onError={(e) => { e.target.src = "https://via.placeholder.com/300x200?text=No+Image"; }}
+                  />
+                </div>
+
+                {/* Content */}
+                <div className="flex flex-col justify-between p-3 flex-1 min-w-0">
+                  {/* Title + Visit */}
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-sm font-bold text-gray-800 leading-tight line-clamp-2 flex-1">
+                      {project.title}
+                    </h3>
+                    {project.link_preview && (
+                      <a
+                        href={project.link_preview}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex-shrink-0 flex items-center gap-1 text-xs border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 px-2 py-1 rounded-lg transition-colors"
+                      >
+                        <i className="ri-share-box-line text-xs"></i>
+                        <span className="hidden sm:inline">Visit</span>
+                      </a>
+                    )}
+                  </div>
+
+                  {/* Description */}
+                  {project.description && (
+                    <p className="text-xs text-gray-500 line-clamp-2 mt-1 leading-relaxed">
+                      {project.description}
+                    </p>
+                  )}
+
+                  {/* Tech stacks */}
+                  {project.tech_stacks && Array.isArray(project.tech_stacks) && project.tech_stacks.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {project.tech_stacks.slice(0, 4).map((tech, idx) => (
+                        <span
+                          key={idx}
+                          className="text-[10px] bg-gray-50 border border-gray-200 rounded px-1.5 py-0.5 text-gray-500 font-mono"
+                        >
+                          #{tech}
+                        </span>
+                      ))}
+                      {project.tech_stacks.length > 4 && (
+                        <span className="text-[10px] text-gray-400 px-1 py-0.5">
+                          +{project.tech_stacks.length - 4} more
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
-                <hr className="border-1 border-gray-200 border-dashed my-3" />
-                <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                  {project.tech_stacks && Array.isArray(project.tech_stacks) && project.tech_stacks.map((tech, idx) => (
-                    <span key={idx} className="text-xs bg-white border border-gray-200 rounded px-1 py-0.5 text-zinc-500 font-mono whitespace-nowrap">
-                       # {tech}
-                    </span>
-                  ))}
-                </div>
-                <hr className="border-1 border-gray-200 border-dashed my-3" />
-                <p className="text-gray-800 text-sm line-clamp-2">
-                  {project.description}
-                </p>
               </div>
             </div>
           ))}
