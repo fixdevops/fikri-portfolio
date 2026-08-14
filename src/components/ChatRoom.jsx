@@ -10,25 +10,40 @@ export default function ChatRoomComponents() {
     const [replyingTo, setReplyingTo] = useState(null);
     const [lastSeenIndex, setLastSeenIndex] = useState(0);
     const [hoveredMessage, setHoveredMessage] = useState(null);
-    const messagesEndRef = useRef(null);
-    const messagesContainerRef = useRef(null);
     const [dateHeaders, setDateHeaders] = useState({});
 
-    const OWNER_EMAIL = "fixzdeveloper@gmail.co"; // Email admin Supabase
+    // Login state
+    const [loginStep, setLoginStep] = useState('form'); // 'form' | 'sent'
+    const [loginEmail, setLoginEmail] = useState('');
+    const [loginName, setLoginName] = useState('');
+    const [loginLoading, setLoginLoading] = useState(false);
+    const [loginError, setLoginError] = useState('');
 
-    // Handle login with Supabase OAuth (Google)
-    const handleLogin = async () => {
+    const messagesEndRef = useRef(null);
+    const messagesContainerRef = useRef(null);
+
+    const OWNER_EMAIL = "fixzdeveloper@gmail.co";
+
+    // Handle login dengan Magic Link (email asli wajib)
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        if (!loginEmail.trim() || !loginName.trim()) return;
+        setLoginLoading(true);
+        setLoginError('');
         try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
+            const { error } = await supabase.auth.signInWithOtp({
+                email: loginEmail.trim(),
                 options: {
-                    redirectTo: window.location.href
+                    data: { full_name: loginName.trim() },
+                    shouldCreateUser: true,
                 }
             });
             if (error) throw error;
-        } catch (error) {
-            console.error('Error saat login:', error);
-            alert(`Login gagal: ${error.message}`);
+            setLoginStep('sent');
+        } catch (err) {
+            setLoginError(err.message || 'Gagal mengirim link. Coba lagi.');
+        } finally {
+            setLoginLoading(false);
         }
     };
 
@@ -232,7 +247,7 @@ export default function ChatRoomComponents() {
                                         alt={user.user_metadata?.full_name || 'User'}
                                         className="w-6 h-6 rounded-full object-cover"
                                     />
-                                    <h3 className="font-semibold text-sm">{user.user_metadata?.full_name || user.email}</h3>
+                                    <h3 className="font-semibold text-sm">{user.user_metadata?.full_name || user.email?.split('@')[0]}</h3>
                                 </>
                             ) : (
                                 <>
@@ -389,14 +404,41 @@ export default function ChatRoomComponents() {
                                     <i className="ri-send-plane-fill"></i>
                                 </button>
                             </form>
+                        ) : loginStep === 'sent' ? (
+                            <div className="text-center py-2">
+                                <i className="ri-mail-send-line text-2xl text-gray-400 mb-1 block"></i>
+                                <p className="text-xs font-semibold text-gray-700">Cek email kamu!</p>
+                                <p className="text-xs text-gray-500 mt-1">Link masuk sudah dikirim ke <span className="font-medium">{loginEmail}</span></p>
+                                <button onClick={() => { setLoginStep('form'); setLoginError(''); }} className="text-xs text-gray-400 underline mt-2">Ganti email</button>
+                            </div>
                         ) : (
-                            <button
-                                onClick={handleLogin}
-                                className="w-full flex items-center justify-center space-x-2 bg-white border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50 transition"
-                            >
-                                <i className="ri-google-fill text-blue-600 text-lg"></i>
-                                <span className="text-sm">Login to start chatting</span>
-                            </button>
+                            <form onSubmit={handleLogin} className="space-y-2">
+                                <p className="text-xs text-gray-500 text-center mb-1">Masukkan nama & email untuk chat</p>
+                                <input
+                                    type="text"
+                                    value={loginName}
+                                    onChange={(e) => setLoginName(e.target.value)}
+                                    placeholder="Nama kamu"
+                                    required
+                                    className="w-full border border-gray-300 bg-white text-gray-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-gray-200"
+                                />
+                                <input
+                                    type="email"
+                                    value={loginEmail}
+                                    onChange={(e) => setLoginEmail(e.target.value)}
+                                    placeholder="Email kamu (wajib asli)"
+                                    required
+                                    className="w-full border border-gray-300 bg-white text-gray-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-gray-200"
+                                />
+                                {loginError && <p className="text-xs text-red-500">{loginError}</p>}
+                                <button
+                                    type="submit"
+                                    disabled={loginLoading}
+                                    className="w-full bg-gray-700 hover:bg-gray-800 text-white rounded-lg py-2 text-sm font-medium disabled:opacity-50 transition"
+                                >
+                                    {loginLoading ? 'Mengirim...' : 'Kirim Link Masuk →'}
+                                </button>
+                            </form>
                         )}
                     </div>
                 </div>
