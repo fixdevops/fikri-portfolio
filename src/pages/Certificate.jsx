@@ -100,8 +100,9 @@ export default function Certificate() {
           <div className="grid gap-3 text-gray-800 dark:text-gray-200">
             {activeCategory === "badge" && (
               <div>
-                <a href="https://www.cloudskillsboost.google/public_profiles/a0413875-4f2d-4c72-b551-524e6cffb45d" target="_blank" rel="noopener noreferrer">
-                  <img src="https://i.ibb.co.com/PZsQdbPZ/Screenshot-2025-02-08-013127.png" alt="Badge" className="w-full object-cover border border-gray-200 shadow-md rounded-[10px]" />
+                <a href="https://www.cloudskillsboost.google/public_profiles/a0413875-4f2d-4c72-b551-524e6cffb45d" target="_blank" rel="noopener noreferrer" className="block group">
+                  <img src="https://i.ibb.co.com/PZsQdbPZ/Screenshot-2025-02-08-013127.png" alt="M. FIKRI ASYAM JAUHARY - Google Cloud Skills Boost Badges" className="w-full object-cover border border-gray-200 shadow-md rounded-[10px] group-hover:opacity-95 transition-opacity" />
+                  <p className="text-sm font-medium text-gray-700 mt-2 text-center">M. FIKRI ASYAM JAUHARY — <span className="text-blue-500 hover:underline">Lihat profil lengkap →</span></p>
                 </a>
               </div>
             )}
