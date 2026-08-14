@@ -108,8 +108,33 @@ export default function Certificate() {
             <div className="w-full mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {filteredCertificates.map((certificate) => (
                 <div key={certificate.id} className={`w-full bg-white rounded-lg overflow-hidden border border-gray-200 ${certificate.category === "badge" ? "border-2 border-gray-200" : ""}`}>
-                  <div className="sertif-image h-48 overflow-hidden relative cursor-pointer" onClick={() => openModal(certificate)}>
-                    <img src={certificate.image_url} alt={certificate.title} className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/400x300?text=Certificate+Image'; }} />
+                    <div
+                    className="sertif-image h-48 overflow-hidden relative cursor-pointer bg-gray-50 flex items-center justify-center"
+                    onClick={() => openModal(certificate)}
+                  >
+                    {certificate.image_url?.endsWith(".pdf") ? (
+                      <>
+                        <iframe
+                          src={`${certificate.image_url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                          className="w-full h-full border-0 pointer-events-none"
+                          title={certificate.title}
+                        />
+                        <div className="absolute inset-0" />
+                      </>
+                    ) : certificate.image_url?.endsWith(".html") || certificate.image_url?.endsWith(".htm") ? (
+                      <>
+                        <iframe
+                          src={certificate.image_url}
+                          className="w-full h-full border-0 pointer-events-none scale-[0.5] origin-top-left"
+                          style={{ width: "200%", height: "200%" }}
+                          title={certificate.title}
+                          sandbox="allow-same-origin"
+                        />
+                        <div className="absolute inset-0" />
+                      </>
+                    ) : (
+                      <img src={certificate.image_url} alt={certificate.title} className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/400x300?text=Certificate+Image'; }} />
+                    )}
                   </div>
                   <div className="p-4">
                     <h3 className="text-sm font-medium text-gray-800 text-left truncate">{certificate.title}</h3>
@@ -129,13 +154,32 @@ export default function Certificate() {
               <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
             <div className="bg-white rounded-lg overflow-hidden">
-              <img src={selectedImage.image_url} alt={selectedImage.title} className="w-full h-auto max-h-[80vh] object-contain" />
-              <div className="p-4">
-                <h3 className="text-lg font-medium text-gray-800">
-                  {selectedImage.title}{' '}
-                  <a href={selectedImage.course_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">[view details]</a>
-                </h3>
-              </div>
+              {selectedImage.image_url?.endsWith(".pdf") || selectedImage.image_url?.endsWith(".html") || selectedImage.image_url?.endsWith(".htm") ? (
+                <div className="flex flex-col" style={{ height: "80vh" }}>
+                  <iframe
+                    src={selectedImage.image_url?.endsWith(".pdf")
+                      ? `${selectedImage.image_url}#toolbar=1&navpanes=0`
+                      : selectedImage.image_url}
+                    className="w-full flex-1 border-0"
+                    title={selectedImage.title}
+                  />
+                  <div className="p-3 bg-white border-t border-gray-200">
+                    <h3 className="text-sm font-medium text-gray-800">{selectedImage.title}</h3>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <img src={selectedImage.image_url} alt={selectedImage.title} className="w-full h-auto max-h-[80vh] object-contain" />
+                  <div className="p-4">
+                    <h3 className="text-lg font-medium text-gray-800">
+                      {selectedImage.title}{' '}
+                      {selectedImage.course_url && (
+                        <a href={selectedImage.course_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">[view details]</a>
+                      )}
+                    </h3>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

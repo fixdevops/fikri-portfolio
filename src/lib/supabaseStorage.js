@@ -6,7 +6,8 @@ export const STORAGE_BUCKET = "portfolio-assets";
 
 // Ekstensi yang diizinkan
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jpg"];
-const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+const ALLOWED_DOC_TYPES = ["application/pdf", "text/html"];
+const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
 // Membersihkan nama file agar aman dipakai sebagai path di Storage.
 const sanitizeFileName = (name) => {
@@ -20,11 +21,16 @@ const sanitizeFileName = (name) => {
  */
 const validateFile = (file) => {
   if (!file) throw new Error("File tidak ditemukan.");
-  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-    throw new Error("Tipe file tidak diizinkan. Gunakan JPG, PNG, WebP, atau GIF.");
+  const ext = (file.name || "").split(".").pop().toLowerCase();
+  const isAllowed =
+    ALLOWED_IMAGE_TYPES.includes(file.type) ||
+    ALLOWED_DOC_TYPES.includes(file.type) ||
+    ["html", "htm"].includes(ext);
+  if (!isAllowed) {
+    throw new Error("Tipe file tidak diizinkan. Gunakan JPG, PNG, WebP, GIF, PDF, atau HTML.");
   }
   if (file.size > MAX_SIZE_BYTES) {
-    throw new Error("Ukuran file melebihi batas 5MB.");
+    throw new Error("Ukuran file melebihi batas 10MB.");
   }
 };
 

@@ -12,6 +12,7 @@ export default function CertificatesSection() {
         const { data, error } = await supabase
           .from("my_certificate")
           .select("*")
+          .eq("is_pinned", true)
           .order("created_at", { ascending: false })
           .limit(3);
 
@@ -44,7 +45,7 @@ export default function CertificatesSection() {
          </div>
       ) : certificates.length === 0 ? (
         <div className="text-center py-8 bg-white border border-gray-200 rounded-lg text-gray-500">
-           No certificates added yet.
+           No pinned certificates. Pin certificates from the admin panel.
         </div>
       ) : (
         <div className="grid gap-4">
@@ -54,12 +55,35 @@ export default function CertificatesSection() {
                 key={cert.id}
                 className="w-full bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-shadow"
               >
-                <div className="sertif-image overflow-hidden">
-                  <img
-                    src={cert.image_url || "https://via.placeholder.com/400x300?text=No+Image"}
-                    alt={cert.title}
-                    className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300"
-                  />
+                <div className="sertif-image overflow-hidden bg-gray-50 flex items-center justify-center h-40 relative">
+                  {cert.image_url?.endsWith(".pdf") ? (
+                    <>
+                      <iframe
+                        src={`${cert.image_url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                        className="w-full h-full border-0 pointer-events-none"
+                        title={cert.title}
+                      />
+                      {/* overlay transparan supaya klik card tidak masuk ke iframe */}
+                      <div className="absolute inset-0" />
+                    </>
+                  ) : cert.image_url?.endsWith(".html") || cert.image_url?.endsWith(".htm") ? (
+                    <>
+                      <iframe
+                        src={cert.image_url}
+                        className="w-full h-full border-0 pointer-events-none scale-[0.5] origin-top-left"
+                        style={{ width: "200%", height: "200%" }}
+                        title={cert.title}
+                        sandbox="allow-same-origin"
+                      />
+                      <div className="absolute inset-0" />
+                    </>
+                  ) : (
+                    <img
+                      src={cert.image_url || "https://via.placeholder.com/400x300?text=No+Image"}
+                      alt={cert.title}
+                      className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  )}
                 </div>
                 <div className="p-3">
                   <h3 className="text-sm font-medium text-gray-600 text-left line-clamp-1">

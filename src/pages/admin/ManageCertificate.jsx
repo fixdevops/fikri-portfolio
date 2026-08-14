@@ -54,16 +54,30 @@ export default function AdminCertificates() {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      alert("Hanya file gambar yang diizinkan (JPG, PNG, WebP, dll)");
+
+    const allowedTypes = [
+      "image/jpeg", "image/png", "image/webp", "image/gif",
+      "application/pdf",
+      "text/html"
+    ];
+    const allowedExts = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".pdf", ".html", ".htm"];
+    const ext = "." + file.name.split(".").pop().toLowerCase();
+
+    if (!allowedTypes.includes(file.type) && !allowedExts.includes(ext)) {
+      alert("Format yang diizinkan: JPG, PNG, WebP, PDF, HTML");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Ukuran file maksimal 5MB");
+    if (file.size > 10 * 1024 * 1024) {
+      alert("Ukuran file maksimal 10MB");
       return;
     }
     setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
+    // Preview hanya untuk gambar
+    if (file.type.startsWith("image/")) {
+      setPreviewUrl(URL.createObjectURL(file));
+    } else {
+      setPreviewUrl(""); // PDF/HTML tidak bisa preview langsung
+    }
   };
 
   // Upload gambar ke Supabase Storage (bucket public "portfolio-assets").
@@ -181,6 +195,22 @@ export default function AdminCertificates() {
     setEditId(null);
   };
 
+  const handlePin = async (certificate) => {
+    try {
+      const { error } = await supabase
+        .from("my_certificate")
+        .update({ is_pinned: !certificate.is_pinned })
+        .eq("id", certificate.id);
+      if (error) throw error;
+      setCertificates(certificates.map(c =>
+        c.id === certificate.id ? { ...c, is_pinned: !c.is_pinned } : c
+      ));
+    } catch (error) {
+      console.error("Error updating pin:", error);
+      alert("Gagal update pin: " + error.message);
+    }
+  };
+
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50">
@@ -209,7 +239,17 @@ export default function AdminCertificates() {
                     <tr key={certificate.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex-shrink-0 h-16 w-16">
-                          <img className="h-16 w-16 object-contain rounded-md" src={certificate.image_url} alt={certificate.title} onError={(e) => { e.target.src = 'https://via.placeholder.com/100'; }} />
+                          {certificate.image_url?.endsWith(".pdf") ? (
+                            <div className="h-16 w-16 flex items-center justify-center bg-red-50 rounded-md">
+                              <svg className="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5z"/></svg>
+                            </div>
+                          ) : certificate.image_url?.endsWith(".html") || certificate.image_url?.endsWith(".htm") ? (
+                            <div className="h-16 w-16 flex items-center justify-center bg-orange-50 rounded-md">
+                              <svg className="w-8 h-8 text-orange-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.56L16.07 16.43L16.62 10.33H9.38L9.2 8.3H16.8L17 6.31H7L7.56 12.32H14.45L14.22 14.9L12 15.5L9.78 14.9L9.64 13.24H7.64L7.93 16.43L12 17.56M4.07 3H19.93L18.5 19.2L12 21L5.5 19.2L4.07 3Z"/></svg>
+                            </div>
+                          ) : (
+                            <img className="h-16 w-16 object-contain rounded-md" src={certificate.image_url} alt={certificate.title} onError={(e) => { e.target.src = 'https://via.placeholder.com/100'; }} />
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -219,6 +259,13 @@ export default function AdminCertificates() {
                         <div className="text-sm font-medium text-gray-900">{certificate.category || "certificate"}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => handlePin(certificate)}
+                          className={`mr-4 text-lg ${certificate.is_pinned ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-300 hover:text-yellow-400'}`}
+                          title={certificate.is_pinned ? "Unpin dari homepage" : "Pin ke homepage"}
+                        >
+                          <i className="ri-pushpin-fill"></i>
+                        </button>
                         <button onClick={() => handleEdit(certificate)} className="text-gray-600 hover:text-gray-900 mr-4">Edit</button>
                         <button onClick={() => openDeleteModal(certificate.id)} className="text-red-600 hover:text-red-900">Delete</button>
                       </td>
@@ -246,17 +293,36 @@ export default function AdminCertificates() {
                   <input type="text" name="title" value={formData.title} onChange={handleInputChange} required className="w-full px-4 py-2 bg-white text-gray-800 border border-gray-300 rounded-md" placeholder="Earned..." />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Upload Gambar Sertifikat*</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Upload Sertifikat* <span className="text-gray-400 font-normal">(JPG, PNG, WebP, PDF, HTML)</span></label>
                   <div onClick={() => fileInputRef.current.click()} className="w-full border-2 border-dashed border-gray-300 rounded-md p-4 flex flex-col items-center justify-center cursor-pointer hover:border-gray-500 hover:bg-gray-50 transition-colors" style={{ minHeight: "130px" }}>
-                    {previewUrl ? (<img src={previewUrl} alt="Preview" className="max-h-28 object-contain rounded-md" />) : (
+                    {selectedFile && selectedFile.type === "application/pdf" ? (
+                      <div className="flex flex-col items-center">
+                        <svg className="w-12 h-12 text-red-500 mb-2" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8.5 17.5c-.3 0-.5-.2-.5-.5v-5c0-.3.2-.5.5-.5h2c1.1 0 2 .9 2 2s-.9 2-2 2H9v1.5c0 .3-.2.5-.5.5zm.5-3h1.5c.6 0 1-.4 1-1s-.4-1-1-1H9v2zm4.5 3c-.3 0-.5-.2-.5-.5v-5c0-.3.2-.5.5-.5H15c1.4 0 2.5 1.1 2.5 2.5S16.4 17.5 15 17.5h-1.5zm.5-1H15c.8 0 1.5-.7 1.5-1.5S15.8 13 15 13h-1v3zm3.5 1c-.3 0-.5-.2-.5-.5V12H15c-.3 0-.5-.2-.5-.5s.2-.5.5-.5h3c.3 0 .5.2.5.5s-.2.5-.5.5h-1v5c0 .3-.2.5-.5.5z"/></svg>
+                        <p className="text-sm font-medium text-gray-700">{selectedFile.name}</p>
+                        <p className="text-xs text-gray-400 mt-1">PDF · {(selectedFile.size / 1024).toFixed(0)} KB</p>
+                      </div>
+                    ) : selectedFile && (selectedFile.name.endsWith(".html") || selectedFile.name.endsWith(".htm")) ? (
+                      <div className="flex flex-col items-center">
+                        <svg className="w-12 h-12 text-orange-500 mb-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.56L16.07 16.43L16.62 10.33H9.38L9.2 8.3H16.8L17 6.31H7L7.56 12.32H14.45L14.22 14.9L12 15.5L9.78 14.9L9.64 13.24H7.64L7.93 16.43L12 17.56M4.07 3H19.93L18.5 19.2L12 21L5.5 19.2L4.07 3Z"/></svg>
+                        <p className="text-sm font-medium text-gray-700">{selectedFile.name}</p>
+                        <p className="text-xs text-gray-400 mt-1">HTML · {(selectedFile.size / 1024).toFixed(0)} KB</p>
+                      </div>
+                    ) : previewUrl ? (
+                      <img src={previewUrl} alt="Preview" className="max-h-28 object-contain rounded-md" />
+                    ) : formData.image_url ? (
+                      <div className="flex flex-col items-center">
+                        <svg className="w-10 h-10 text-green-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <p className="text-xs text-gray-500">File sudah ada. Klik untuk ganti.</p>
+                      </div>
+                    ) : (
                       <>
                         <svg className="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                        <p className="text-sm text-gray-500 font-medium">Klik untuk pilih gambar</p>
-                        <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP · Maks 5MB</p>
+                        <p className="text-sm text-gray-500 font-medium">Klik untuk pilih file</p>
+                        <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP, PDF, HTML · Maks 10MB</p>
                       </>
                     )}
                   </div>
-                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                  <input ref={fileInputRef} type="file" accept="image/*,.pdf,.html,.htm" onChange={handleFileChange} className="hidden" />
                   {isUploading && (
                     <div className="mt-2">
                       <div className="w-full bg-gray-200 rounded-full h-1.5">

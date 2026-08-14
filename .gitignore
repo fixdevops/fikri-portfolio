@@ -29,3 +29,6 @@ backend/src/data/db.json
 *.njsproj
 *.sln
 *.sw?
+
+# Kiro settings (contains secrets/tokens)
+.kiro/settings/

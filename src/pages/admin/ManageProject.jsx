@@ -201,6 +201,22 @@ export default function AdminProjects() {
     setEditId(null);
   };
 
+  const handlePin = async (project) => {
+    try {
+      const { error } = await supabase
+        .from("my_project")
+        .update({ is_pinned: !project.is_pinned })
+        .eq("id", project.id);
+      if (error) throw error;
+      setProjects(projects.map(p =>
+        p.id === project.id ? { ...p, is_pinned: !p.is_pinned } : p
+      ));
+    } catch (error) {
+      console.error("Error updating pin:", error);
+      alert("Gagal update pin: " + error.message);
+    }
+  };
+
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50">
@@ -322,6 +338,9 @@ export default function AdminProjects() {
                       <p className="text-xs text-gray-500 mt-2 line-clamp-2">{project.description}</p>
                     )}
                     <div className="mt-auto pt-2 flex justify-end gap-2">
+                      <button onClick={() => handlePin(project)} className={`p-1 rounded transition text-lg ${project.is_pinned ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-300 hover:text-yellow-400'}`} title={project.is_pinned ? "Unpin dari homepage" : "Pin ke homepage"}>
+                        <i className="ri-pushpin-fill"></i>
+                      </button>
                       <button onClick={() => handleEdit(project)} className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-800 transition" title="Edit">
                         <i className="ri-edit-line text-base"></i>
                       </button>

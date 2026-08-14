@@ -12,6 +12,7 @@ export default function ProjectsSection() {
         const { data, error } = await supabase
           .from("my_project")
           .select("*")
+          .eq("is_pinned", true)
           .order("created_at", { ascending: false })
           .limit(3);
 
@@ -44,7 +45,7 @@ export default function ProjectsSection() {
         </div>
       ) : projects.length === 0 ? (
         <div className="text-center py-8 bg-white border border-gray-200 rounded-lg text-gray-500">
-          No projects added yet.
+          No pinned projects. Pin projects from the admin panel.
         </div>
       ) : (
         <div className="grid gap-2">
