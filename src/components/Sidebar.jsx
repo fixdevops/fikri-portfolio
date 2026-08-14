@@ -10,6 +10,7 @@ const menuItems = [
   { label: "Manage Blogs", path: "/dashboard/frontdev/manage-blogs" },
   { label: "Manage Quotes", path: "/dashboard/creator/manage-quotes" },
   { label: "Manage Audio", path: "/dashboard/creator/manage-audio" },
+  { label: "Manage Chat", path: "/dashboard/manage-chat" },
 ];
 
 export default function Sidebar({ onClose }) {

@@ -29,6 +29,7 @@ import DashboardAnime from './pages/admin/ManageAnime';
 import DashboardReelsAnime from './pages/admin/ManageReelsAnime';
 import ManageQuotes from './pages/admin/ManageQuotes';
 import ManageAudio from './pages/admin/ManageAudio';
+import ManageChat from './pages/admin/ManageChat';
 
 function App() {
   return (
@@ -62,6 +63,7 @@ function App() {
         <Route path="/dashboard/animes/manage-reels" element={<ProtectedRoute><DashboardReelsAnime /></ProtectedRoute>} />
         <Route path="/dashboard/creator/manage-quotes" element={<ProtectedRoute><ManageQuotes /></ProtectedRoute>} />
         <Route path="/dashboard/creator/manage-audio" element={<ProtectedRoute><ManageAudio /></ProtectedRoute>} />
+        <Route path="/dashboard/manage-chat" element={<ProtectedRoute><ManageChat /></ProtectedRoute>} />
       </Routes>
     </Router>
   );

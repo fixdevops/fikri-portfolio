@@ -14,7 +14,7 @@ export default function ChatRoomComponents() {
     const messagesContainerRef = useRef(null);
     const [dateHeaders, setDateHeaders] = useState({});
 
-    const OWNER_EMAIL = "fikri@example.com"; // Change to your Supabase admin email
+    const OWNER_EMAIL = "fixzdeveloper@gmail.co"; // Email admin Supabase
 
     // Handle login with Supabase OAuth (Google)
     const handleLogin = async () => {
@@ -53,6 +53,7 @@ export default function ChatRoomComponents() {
                 text: newMessage,
                 display_name: user.user_metadata?.full_name || user.email,
                 photo_url: user.user_metadata?.avatar_url || '',
+                user_email: user.email,
                 created_at: new Date().toISOString(),
                 uid: user.id,
                 is_owner: user.email === OWNER_EMAIL

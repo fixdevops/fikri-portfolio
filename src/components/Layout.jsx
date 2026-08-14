@@ -13,6 +13,7 @@ const pageTitles = {
   "/dashboard/frontdev/manage-blogs": "Manage Blogs",
   "/dashboard/creator/manage-quotes": "Manage Quotes",
   "/dashboard/creator/manage-audio": "Manage Audio",
+  "/dashboard/manage-chat": "Manage Chat",
 };
 
 export default function Layout({ children }) {
