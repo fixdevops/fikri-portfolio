@@ -14,7 +14,9 @@ export default function AdminProjects() {
     codeUrl: "",
     category: "project",
     techStacks: "",
-    featured: false
+    featured: false,
+    image_fit: "cover",
+    image_height: 130,
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -119,6 +121,8 @@ export default function AdminProjects() {
         category: formData.category,
         tech_stacks: parseTechStacks(formData.techStacks),
         featured: formData.featured,
+        image_fit: formData.image_fit,
+        image_height: parseInt(formData.image_height) || 130,
         updated_at: new Date().toISOString()
       };
 
@@ -156,6 +160,8 @@ export default function AdminProjects() {
       category: project.category || "project",
       techStacks: techStacksToString(project.tech_stacks),
       featured: project.featured || false,
+      image_fit: project.image_fit || "cover",
+      image_height: project.image_height || 130,
     });
     setPreviewUrl(project.thumbnail || "");
     setSelectedFile(null);
@@ -192,7 +198,9 @@ export default function AdminProjects() {
       codeUrl: "",
       category: "project",
       techStacks: "",
-      featured: false
+      featured: false,
+      image_fit: "cover",
+      image_height: 130,
     });
     setSelectedFile(null);
     setPreviewUrl("");
@@ -278,6 +286,45 @@ export default function AdminProjects() {
                       <div className="bg-gray-600 h-1 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
                     </div>
                     <p className="text-xs text-gray-400 mt-0.5">Uploading {uploadProgress}%</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Image Display Options */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Image Fit <span className="text-gray-400 font-normal text-xs">(cara gambar ditampilkan)</span>
+                </label>
+                <select name="image_fit" value={formData.image_fit} onChange={handleInputChange} className="w-full px-3 py-2 bg-white text-gray-800 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-300">
+                  <option value="cover">Cover (penuh, terpotong)</option>
+                  <option value="contain">Contain (penuh, tidak terpotong)</option>
+                  <option value="fill">Fill (peregangan)</option>
+                  <option value="none">None (ukuran asli)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tinggi Gambar <span className="text-gray-400 font-normal text-xs">(px, default 130)</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="range"
+                    name="image_height"
+                    min="80"
+                    max="300"
+                    step="10"
+                    value={formData.image_height}
+                    onChange={handleInputChange}
+                    className="flex-1"
+                  />
+                  <span className="text-sm text-gray-600 w-12 text-right font-mono">{formData.image_height}px</span>
+                </div>
+                {/* Preview thumbnail with current settings */}
+                {previewUrl && (
+                  <div className="mt-2 border border-gray-200 rounded overflow-hidden" style={{ width: "160px", height: `${formData.image_height}px` }}>
+                    <img src={previewUrl} alt="preview" style={{ width: "100%", height: "100%", objectFit: formData.image_fit }} />
                   </div>
                 )}
               </div>
