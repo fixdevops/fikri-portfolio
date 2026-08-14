@@ -57,14 +57,22 @@ export default function CertificatesSection() {
               >
                 <div className="sertif-image overflow-hidden bg-gray-50 flex items-center justify-center h-40 relative">
                   {cert.image_url?.endsWith(".pdf") ? (
-                    <>
-                      <iframe
-                        src={`https://docs.google.com/viewer?url=${encodeURIComponent(cert.image_url)}&embedded=true`}
-                        className="w-full h-full border-0 pointer-events-none"
-                        title={cert.title}
+                    cert.thumbnail_url ? (
+                      <img
+                        src={cert.thumbnail_url}
+                        alt={cert.title}
+                        className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300"
                       />
-                      <div className="absolute inset-0" />
-                    </>
+                    ) : (
+                      <>
+                        <iframe
+                          src={`https://docs.google.com/viewer?url=${encodeURIComponent(cert.image_url)}&embedded=true`}
+                          className="w-full h-full border-0 pointer-events-none"
+                          title={cert.title}
+                        />
+                        <div className="absolute inset-0" />
+                      </>
+                    )
                   ) : cert.image_url?.endsWith(".html") || cert.image_url?.endsWith(".htm") ? (
                     <>
                       <iframe

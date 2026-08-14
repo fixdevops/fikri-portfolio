@@ -113,14 +113,22 @@ export default function Certificate() {
                     onClick={() => openModal(certificate)}
                   >
                     {certificate.image_url?.endsWith(".pdf") ? (
-                      <>
-                        <iframe
-                          src={`https://docs.google.com/viewer?url=${encodeURIComponent(certificate.image_url)}&embedded=true`}
-                          className="w-full h-full border-0 pointer-events-none"
-                          title={certificate.title}
+                      certificate.thumbnail_url ? (
+                        <img
+                          src={certificate.thumbnail_url}
+                          alt={certificate.title}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
-                        <div className="absolute inset-0" />
-                      </>
+                      ) : (
+                        <>
+                          <iframe
+                            src={`https://docs.google.com/viewer?url=${encodeURIComponent(certificate.image_url)}&embedded=true`}
+                            className="w-full h-full border-0 pointer-events-none"
+                            title={certificate.title}
+                          />
+                          <div className="absolute inset-0" />
+                        </>
+                      )
                     ) : certificate.image_url?.endsWith(".html") || certificate.image_url?.endsWith(".htm") ? (
                       <>
                         <iframe

@@ -104,11 +104,38 @@ export default function AdminCertificates() {
     setIsSubmitting(true);
     try {
       let image_url = formData.image_url;
+      let thumbnail_url = formData.thumbnail_url || null;
+
       if (selectedFile) {
         image_url = await uploadImage(selectedFile);
+
+        // Auto-generate thumbnail kalau file PDF
+        if (selectedFile.name.toLowerCase().endsWith(".pdf")) {
+          try {
+            setIsUploading(true);
+            const { data: sessionData } = await supabase.auth.getSession();
+            const token = sessionData?.session?.access_token;
+            const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pdf-thumbnail`;
+            const res = await fetch(fnUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+              body: JSON.stringify({ pdf_url: image_url }),
+            });
+            const result = await res.json();
+            if (result.thumbnail_url) thumbnail_url = result.thumbnail_url;
+          } catch (thumbErr) {
+            console.warn("Thumbnail generation failed:", thumbErr);
+          } finally {
+            setIsUploading(false);
+          }
+        }
       }
+
       if (!image_url) {
-        alert("Harap upload gambar sertifikat terlebih dahulu.");
+        alert("Harap upload sertifikat terlebih dahulu.");
         setIsSubmitting(false);
         return;
       }
@@ -116,6 +143,7 @@ export default function AdminCertificates() {
       const certificateData = {
         title: formData.title,
         image_url,
+        thumbnail_url,
         course_url: formData.course_url,
         category: formData.category,
         updated_at: new Date().toISOString()
