@@ -121,14 +121,6 @@ export default function Certificate() {
                 </a>
               </div>
             )}
-            {activeCategory === "badge" && (
-              <div>
-                <a href="https://www.cloudskillsboost.google/public_profiles/a0413875-4f2d-4c72-b551-524e6cffb45d" target="_blank" rel="noopener noreferrer" className="block group">
-                  <img src="https://i.ibb.co.com/PZsQdbPZ/Screenshot-2025-02-08-013127.png" alt="Google Cloud Skills Boost Badges" className="w-full object-cover border border-gray-200 shadow-md rounded-[10px] group-hover:opacity-95 transition-opacity" />
-                  <p className="text-xs text-gray-400 mt-2 text-center">Google Cloud Skills Boost →</p>
-                </a>
-              </div>
-            )}
             <div className="w-full mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {filteredCertificates.map((certificate) => (
                 <div key={certificate.id} className={`w-full bg-white rounded-lg overflow-hidden border border-gray-200 ${certificate.category === "badge" ? "border-2 border-gray-200" : ""}`}>
