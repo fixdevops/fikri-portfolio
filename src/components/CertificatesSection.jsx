@@ -59,11 +59,10 @@ export default function CertificatesSection() {
                   {cert.image_url?.endsWith(".pdf") ? (
                     <>
                       <iframe
-                        src={`${cert.image_url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                        src={`https://docs.google.com/viewer?url=${encodeURIComponent(cert.image_url)}&embedded=true`}
                         className="w-full h-full border-0 pointer-events-none"
                         title={cert.title}
                       />
-                      {/* overlay transparan supaya klik card tidak masuk ke iframe */}
                       <div className="absolute inset-0" />
                     </>
                   ) : cert.image_url?.endsWith(".html") || cert.image_url?.endsWith(".htm") ? (

@@ -115,7 +115,7 @@ export default function Certificate() {
                     {certificate.image_url?.endsWith(".pdf") ? (
                       <>
                         <iframe
-                          src={`${certificate.image_url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                          src={`https://docs.google.com/viewer?url=${encodeURIComponent(certificate.image_url)}&embedded=true`}
                           className="w-full h-full border-0 pointer-events-none"
                           title={certificate.title}
                         />
@@ -158,7 +158,7 @@ export default function Certificate() {
                 <div className="flex flex-col" style={{ height: "80vh" }}>
                   <iframe
                     src={selectedImage.image_url?.endsWith(".pdf")
-                      ? `${selectedImage.image_url}#toolbar=1&navpanes=0`
+                      ? `https://docs.google.com/viewer?url=${encodeURIComponent(selectedImage.image_url)}&embedded=true`
                       : selectedImage.image_url}
                     className="w-full flex-1 border-0"
                     title={selectedImage.title}
