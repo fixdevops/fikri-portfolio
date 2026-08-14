@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../supabase";
+import { uploadAsset, pathFromPublicUrl, deleteAsset } from "../../lib/supabaseStorage";
 import Layout from "../../components/Layout";
-
-const CLOUDINARY_CLOUD_NAME = "dimscumz2";
-const CLOUDINARY_UPLOAD_PRESET = "portfolio_certs";
 
 export default function AdminProjects() {
   const [projects, setProjects] = useState([]);
@@ -69,28 +67,17 @@ export default function AdminProjects() {
     setPreviewUrl(URL.createObjectURL(file));
   };
 
-  const uploadImageToCloudinary = async (file) => {
+  // Upload thumbnail project ke Supabase Storage (bucket public).
+  const uploadImage = async (file) => {
     setIsUploading(true);
-    setUploadProgress(10);
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-    fd.append("folder", "projects");
+    setUploadProgress(0);
     try {
-      setUploadProgress(30);
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: "POST", body: fd }
+      const { publicUrl } = await uploadAsset(file, "projects", (p) =>
+        setUploadProgress(p)
       );
-      setUploadProgress(80);
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error?.message || "Upload gagal");
-      }
-      const data = await response.json();
       setUploadProgress(100);
       setIsUploading(false);
-      return data.secure_url;
+      return publicUrl;
     } catch (error) {
       setIsUploading(false);
       setUploadProgress(0);
@@ -120,7 +107,7 @@ export default function AdminProjects() {
     try {
       let thumbnail = formData.thumbnail;
       if (selectedFile) {
-        thumbnail = await uploadImageToCloudinary(selectedFile);
+        thumbnail = await uploadImage(selectedFile);
       }
 
       const projectData = {
@@ -178,12 +165,17 @@ export default function AdminProjects() {
 
   const handleDelete = async (id) => {
     if (window.confirm("Hapus project ini?")) {
+      const target = projects.find((p) => p.id === id);
       try {
         const { error } = await supabase
           .from("my_project")
           .delete()
           .eq("id", id);
         if (error) throw error;
+        // Hapus juga thumbnail lama dari Supabase Storage (opsional, biar rapi).
+        if (target?.thumbnail) {
+          await deleteAsset(pathFromPublicUrl(target.thumbnail));
+        }
         fetchProjects();
       } catch (error) {
         console.error("Error deleting project: ", error);

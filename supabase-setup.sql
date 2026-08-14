@@ -340,6 +340,42 @@ CREATE POLICY "Authenticated users can insert chat messages"
   WITH CHECK (true);
 
 -- ============================================================
+-- STORAGE (Bucket Publik untuk gambar portfolio)
+-- ============================================================
+-- Menyimpan foto sertifikat, thumbnail project, gambar blog, dll.
+-- Bucket dibuat PUBLIC agar URL gambar bisa diakses langsung tanpa login
+-- (penting supaya gambar tampil di website). Upload hanya boleh oleh admin
+-- yang sudah login (policy authenticated). Bisa di-run ulang dengan aman.
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('portfolio-assets', 'portfolio-assets', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Policy READ: siapa saja (anon/public) boleh membaca/melihat gambar
+CREATE POLICY "Public dapat melihat aset portfolio"
+  ON storage.objects FOR SELECT
+  TO public
+  USING (bucket_id = 'portfolio-assets');
+
+-- Policy UPLOAD: hanya user yang sudah login (admin) yang bisa upload
+CREATE POLICY "Admin dapat upload aset portfolio"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (bucket_id = 'portfolio-assets');
+
+-- Policy UPDATE: hanya admin yang bisa mengupdate file
+CREATE POLICY "Admin dapat update aset portfolio"
+  ON storage.objects FOR UPDATE
+  TO authenticated
+  USING (bucket_id = 'portfolio-assets');
+
+-- Policy DELETE: hanya admin yang bisa menghapus file
+CREATE POLICY "Admin dapat hapus aset portfolio"
+  ON storage.objects FOR DELETE
+  TO authenticated
+  USING (bucket_id = 'portfolio-assets');
+
+-- ============================================================
 -- ENABLE REALTIME (Untuk Chat Room)
 -- ============================================================
 -- Jalankan ini untuk mengaktifkan realtime pada tabel chat_messages

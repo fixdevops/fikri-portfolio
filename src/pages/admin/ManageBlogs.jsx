@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../supabase";
+import { uploadAsset, pathFromPublicUrl, deleteAsset } from "../../lib/supabaseStorage";
 import Layout from "../../components/Layout";
 
 export default function ManageBlogs() {
@@ -13,6 +14,9 @@ export default function ManageBlogs() {
     title: '', slug: '', content: '', thumbnail: '', reading_time: 2,
     published_at: null, status: 'draft', excerpt: '', tags: []
   });
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const thumbInputRef = useRef(null);
 
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -34,6 +38,36 @@ export default function ManageBlogs() {
 
   const generateSlug = (title) => {
     return title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/--+/g, '-').trim();
+  };
+
+  // Upload thumbnail blog ke Supabase Storage (bucket public "portfolio-assets").
+  const handleThumbnailUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alert("Hanya file gambar yang diizinkan (JPG, PNG, WebP).");
+      e.target.value = "";
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Ukuran file maksimal 5MB.");
+      e.target.value = "";
+      return;
+    }
+    setIsUploading(true);
+    setUploadProgress(0);
+    try {
+      const { publicUrl } = await uploadAsset(file, "blogs", (p) => setUploadProgress(p));
+      setCurrentBlog((prev) => ({ ...prev, thumbnail: publicUrl }));
+      setUploadProgress(100);
+    } catch (error) {
+      console.error("Error uploading thumbnail:", error);
+      alert("Upload gagal: " + (error.message || "Terjadi kesalahan."));
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+      if (thumbInputRef.current) thumbInputRef.current.value = "";
+    }
   };
 
   const handleDeleteClick = (blog) => { setBlogToDelete(blog); setShowDeleteModal(true); };
@@ -60,6 +94,10 @@ export default function ManageBlogs() {
     try {
       const { error } = await supabase.from("my_blogs").delete().eq("id", blogToDelete.id);
       if (error) throw error;
+      // Hapus juga thumbnail lama dari Supabase Storage (opsional, biar rapi).
+      if (blogToDelete?.thumbnail) {
+        await deleteAsset(pathFromPublicUrl(blogToDelete.thumbnail));
+      }
       setBlogs(blogs.filter(blog => blog.id !== blogToDelete.id));
       setShowDeleteModal(false);
     } catch (error) {
@@ -245,13 +283,25 @@ export default function ManageBlogs() {
                     <input type="text" name="title" value={currentBlog.title} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail URL</label>
-                    <input type="url" name="thumbnail" value={currentBlog.thumbnail} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800" placeholder="https://example.com/image.jpg" />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail</label>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input type="url" name="thumbnail" value={currentBlog.thumbnail} onChange={handleInputChange} className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800" placeholder="https://example.com/image.jpg (atau upload di kanan)" />
+                      <button type="button" onClick={() => thumbInputRef.current?.click()} disabled={isUploading} className="px-3 py-2 bg-gray-600 text-white rounded-md text-sm font-medium hover:bg-gray-700 disabled:opacity-50 whitespace-nowrap">
+                        {isUploading ? `Uploading ${uploadProgress}%` : 'Upload File'}
+                      </button>
+                      <input ref={thumbInputRef} type="file" accept="image/*" onChange={handleThumbnailUpload} className="hidden" />
+                    </div>
+                    {isUploading && (
+                      <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+                        <div className="bg-gray-600 h-1.5 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                      </div>
+                    )}
                     {currentBlog.thumbnail && (
                       <div className="mt-2">
                         <img src={currentBlog.thumbnail} alt="Thumbnail preview" className="h-32 object-contain rounded border border-gray-200" onError={(e) => e.target.style.display = 'none'} />
                       </div>
                     )}
+                    <p className="mt-1 text-xs text-gray-400">Bisa upload file (disimpan ke Supabase) atau tempel URL gambar.</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>

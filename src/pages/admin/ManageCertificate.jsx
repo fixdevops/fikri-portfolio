@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../supabase";
+import { uploadAsset, pathFromPublicUrl, deleteAsset } from "../../lib/supabaseStorage";
 import Modal from 'react-modal';
 import Layout from "../../components/Layout";
-
-const CLOUDINARY_CLOUD_NAME = "dimscumz2";
-const CLOUDINARY_UPLOAD_PRESET = "portfolio_certs";
 
 Modal.setAppElement('#root');
 
@@ -68,28 +66,18 @@ export default function AdminCertificates() {
     setPreviewUrl(URL.createObjectURL(file));
   };
 
-  const uploadImageToCloudinary = async (file) => {
+  // Upload gambar ke Supabase Storage (bucket public "portfolio-assets").
+  // Hasilnya adalah URL publik yang langsung dipakai untuk menampilkan gambar.
+  const uploadImage = async (file) => {
     setIsUploading(true);
-    setUploadProgress(10);
-    const formDataUpload = new FormData();
-    formDataUpload.append("file", file);
-    formDataUpload.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-    formDataUpload.append("folder", "certificates");
+    setUploadProgress(0);
     try {
-      setUploadProgress(30);
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: "POST", body: formDataUpload }
+      const { publicUrl } = await uploadAsset(file, "certificates", (p) =>
+        setUploadProgress(p)
       );
-      setUploadProgress(80);
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error?.message || "Upload gagal");
-      }
-      const data = await response.json();
       setUploadProgress(100);
       setIsUploading(false);
-      return data.secure_url;
+      return publicUrl;
     } catch (error) {
       setIsUploading(false);
       setUploadProgress(0);
@@ -103,7 +91,7 @@ export default function AdminCertificates() {
     try {
       let image_url = formData.image_url;
       if (selectedFile) {
-        image_url = await uploadImageToCloudinary(selectedFile);
+        image_url = await uploadImage(selectedFile);
       }
       if (!image_url) {
         alert("Harap upload gambar sertifikat terlebih dahulu.");
@@ -164,19 +152,23 @@ export default function AdminCertificates() {
   const closeDeleteModal = () => { setDeleteModalOpen(false); setCertificateToDelete(null); };
 
   const handleDelete = async () => {
-    if (certificateToDelete) {
-      try {
-        const { error } = await supabase
-          .from("my_certificate")
-          .delete()
-          .eq("id", certificateToDelete);
-        if (error) throw error;
-        fetchCertificates();
-      } catch (error) {
-        console.error("Error deleting certificate: ", error);
-      } finally {
-        closeDeleteModal();
+    if (!certificateToDelete) return;
+    const target = certificates.find((c) => c.id === certificateToDelete);
+    try {
+      const { error } = await supabase
+        .from("my_certificate")
+        .delete()
+        .eq("id", certificateToDelete);
+      if (error) throw error;
+      // Hapus juga gambar lama dari Supabase Storage supaya rapi (opsional).
+      if (target?.image_url) {
+        await deleteAsset(pathFromPublicUrl(target.image_url));
       }
+      fetchCertificates();
+    } catch (error) {
+      console.error("Error deleting certificate: ", error);
+    } finally {
+      closeDeleteModal();
     }
   };
 
