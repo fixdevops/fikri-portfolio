@@ -99,10 +99,33 @@ export default function Certificate() {
         ) : (
           <div className="grid gap-3 text-gray-800 dark:text-gray-200">
             {activeCategory === "badge" && (
+              <div className="flex flex-col items-center py-6 border border-gray-200 rounded-xl bg-white shadow-sm mb-4">
+                {/* Foto profil */}
+                <img
+                  src="/fotoprofile fixz.png"
+                  alt="M. FIKRI ASYAM JAUHARY"
+                  className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 shadow-md mb-3"
+                />
+                {/* Nama */}
+                <h3 className="text-base font-bold text-gray-800">M. FIKRI ASYAM JAUHARY</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Software Engineer · Cysec Engineer</p>
+                {/* Tombol LinkedIn */}
+                <a
+                  href="https://www.linkedin.com/in/mfikriasyamjauhary/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 flex items-center gap-2 px-4 py-2 bg-[#0A66C2] hover:bg-[#084d93] text-white text-xs font-semibold rounded-lg transition-colors"
+                >
+                  <i className="ri-linkedin-fill text-sm"></i>
+                  Lihat Profil LinkedIn
+                </a>
+              </div>
+            )}
+            {activeCategory === "badge" && (
               <div>
                 <a href="https://www.cloudskillsboost.google/public_profiles/a0413875-4f2d-4c72-b551-524e6cffb45d" target="_blank" rel="noopener noreferrer" className="block group">
-                  <img src="https://i.ibb.co.com/PZsQdbPZ/Screenshot-2025-02-08-013127.png" alt="M. FIKRI ASYAM JAUHARY - Google Cloud Skills Boost Badges" className="w-full object-cover border border-gray-200 shadow-md rounded-[10px] group-hover:opacity-95 transition-opacity" />
-                  <p className="text-sm font-medium text-gray-700 mt-2 text-center">M. FIKRI ASYAM JAUHARY — <span className="text-blue-500 hover:underline">Lihat profil lengkap →</span></p>
+                  <img src="https://i.ibb.co.com/PZsQdbPZ/Screenshot-2025-02-08-013127.png" alt="Google Cloud Skills Boost Badges" className="w-full object-cover border border-gray-200 shadow-md rounded-[10px] group-hover:opacity-95 transition-opacity" />
+                  <p className="text-xs text-gray-400 mt-2 text-center">Google Cloud Skills Boost →</p>
                 </a>
               </div>
             )}
