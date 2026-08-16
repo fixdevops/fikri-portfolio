@@ -12,6 +12,7 @@ import {
   MessageSquare,
   GraduationCap,
   Briefcase,
+  FileText,
   X,
   Zap,
 } from "lucide-react";
@@ -71,6 +72,11 @@ const menuItems = [
     label: "Experience",
     path: "/dashboard/manage-experience",
     icon: Briefcase,
+  },
+  {
+    label: "Resume",
+    path: "/dashboard/manage-resume",
+    icon: FileText,
   },
 ];
 

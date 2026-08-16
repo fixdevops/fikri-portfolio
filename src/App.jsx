@@ -35,6 +35,7 @@ import ManageAudio from './pages/admin/ManageAudio';
 import ManageChat from './pages/admin/ManageChat';
 import ManageEducation from './pages/admin/ManageEducation';
 import ManageExperience from './pages/admin/ManageExperience';
+import ManageResume from './pages/admin/ManageResume';
 
 function AppRoutes() {
   usePageTracking();
@@ -71,6 +72,7 @@ function AppRoutes() {
       <Route path="/dashboard/manage-chat" element={<ProtectedRoute><ManageChat /></ProtectedRoute>} />
       <Route path="/dashboard/manage-education" element={<ProtectedRoute><ManageEducation /></ProtectedRoute>} />
       <Route path="/dashboard/manage-experience" element={<ProtectedRoute><ManageExperience /></ProtectedRoute>} />
+      <Route path="/dashboard/manage-resume" element={<ProtectedRoute><ManageResume /></ProtectedRoute>} />
     </Routes>
   );
 }
