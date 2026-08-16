@@ -139,16 +139,17 @@ export default function ManageAudio() {
     <Layout>
       <div className="min-h-screen">
         <div className="max-w-full mx-auto">
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="mb-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title <span className="text-red-500">*</span></label>
-                <input type="text" name="title" value={newAudio.title} onChange={handleInputChange} className="w-full px-3 py-2 bg-white text-gray-800 border border-gray-300 rounded-lg text-sm" required placeholder="Title" />
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Title <span className="text-red-400">*</span></label>
+                <input type="text" name="title" value={newAudio.title} onChange={handleInputChange} className="w-full px-3 py-2.5 bg-gray-50 focus:bg-white text-gray-800 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all" required placeholder="Audio title" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category <span className="text-red-500">*</span></label>
-                <select name="category" value={newAudio.category} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-800 text-sm" required>
-                  <option value="sound_efect">Sound Efect</option>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Category <span className="text-red-400">*</span></label>
+                <select name="category" value={newAudio.category} onChange={handleInputChange} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all" required>
+                  <option value="sound_efect">Sound Effect</option>
                   <option value="quote_random">Quote Random</option>
                   <option value="arabic">Arabic</option>
                   <option value="islamic">Islamic</option>
@@ -157,28 +158,34 @@ export default function ManageAudio() {
                 </select>
               </div>
               <div className="sm:col-span-2 lg:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Audio URL <span className="text-red-500">*</span></label>
-                <input type="url" name="audio_url" value={newAudio.audio_url} onChange={handleInputChange} placeholder="https://example.com/audio.mp3" className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-800 text-sm" required />
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Audio URL <span className="text-red-400">*</span></label>
+                <input type="url" name="audio_url" value={newAudio.audio_url} onChange={handleInputChange} placeholder="https://example.com/audio.mp3" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all" required />
               </div>
               <div className="flex gap-2 items-end">
                 {editingId && (
-                  <button type="button" onClick={handleCancelEdit} className="flex-1 h-[38px] bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 text-sm">Cancel</button>
+                  <button type="button" onClick={handleCancelEdit} className="flex-1 h-[42px] bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 text-sm flex items-center justify-center gap-1.5 transition-colors">
+                    <X size={13} /> Batal
+                  </button>
                 )}
-                <button type="submit" disabled={isSubmitting} className="flex-1 h-[38px] text-white font-medium rounded-lg bg-gray-600 hover:bg-gray-700 disabled:opacity-70 text-sm">
-                  {isSubmitting ? '...' : editingId ? 'Update' : 'Add'}
+                <button type="submit" disabled={isSubmitting} className="flex-1 h-[42px] text-white font-medium rounded-xl bg-gray-900 hover:bg-gray-700 disabled:opacity-60 text-sm flex items-center justify-center gap-1.5 transition-colors">
+                  <Save size={13} />
+                  {isSubmitting ? 'Saving...' : editingId ? 'Update' : 'Add'}
                 </button>
               </div>
             </div>
           </form>
 
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-base font-semibold text-gray-800">Audio Library</h2>
-            <div className="flex flex-wrap gap-1.5 justify-end">
-              <button onClick={() => applyFilter('all')} className={`px-2 py-1 text-xs font-medium rounded-full transition-colors ${activeFilter === 'all' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <Music2 size={15} className="text-gray-400" />
+              <h2 className="text-sm font-semibold text-gray-700">Audio Library</h2>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <button onClick={() => applyFilter('all')} className={`px-2.5 py-1 text-xs font-medium rounded-full transition-colors ${activeFilter === 'all' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
                 All ({categoryCounts.all || 0})
               </button>
               {Object.entries(categoryCounts).filter(([key]) => key !== 'all').map(([category, count]) => (
-                <button key={category} onClick={() => applyFilter(category)} className={`px-2 py-1 text-xs font-medium rounded-full transition-colors ${activeFilter === category ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>
+                <button key={category} onClick={() => applyFilter(category)} className={`px-2.5 py-1 text-xs font-medium rounded-full transition-colors ${activeFilter === category ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
                   {formatCategory(category)} ({count})
                 </button>
               ))}

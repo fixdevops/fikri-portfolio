@@ -15,6 +15,8 @@ const pageTitles = {
   "/dashboard/creator/manage-quotes": "Manage Quotes",
   "/dashboard/creator/manage-audio": "Manage Audio",
   "/dashboard/manage-chat": "Manage Chat",
+  "/dashboard/manage-education": "Manage Education",
+  "/dashboard/manage-experience": "Manage Experience",
 };
 
 export default function Layout({ children }) {

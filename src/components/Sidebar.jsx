@@ -10,6 +10,8 @@ import {
   Quote,
   Music2,
   MessageSquare,
+  GraduationCap,
+  Briefcase,
   X,
   Zap,
 } from "lucide-react";
@@ -59,6 +61,16 @@ const menuItems = [
     label: "Manage Chat",
     path: "/dashboard/manage-chat",
     icon: MessageSquare,
+  },
+  {
+    label: "Education",
+    path: "/dashboard/manage-education",
+    icon: GraduationCap,
+  },
+  {
+    label: "Experience",
+    path: "/dashboard/manage-experience",
+    icon: Briefcase,
   },
 ];
 

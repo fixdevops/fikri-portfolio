@@ -334,89 +334,164 @@ export default function AdminCertificates() {
         </div>
 
         {/* Add/Edit Modal */}
-        <Modal isOpen={isModalOpen} onRequestClose={closeModal} contentLabel={editId ? "Edit Certificate" : "Add Certificate"} className="modal" overlayClassName="modal-overlay">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-auto max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">{editId ? "Edit Certificate" : "Add New Certificate"}</h2>
-              <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+        <Modal
+          isOpen={isModalOpen}
+          onRequestClose={closeModal}
+          contentLabel={editId ? "Edit Certificate" : "Add Certificate"}
+          className="modal"
+          overlayClassName="modal-overlay"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto max-h-[92vh] flex flex-col">
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                {editId ? <Pencil size={16} className="text-gray-500" /> : <Plus size={16} className="text-gray-500" />}
+                <h2 className="text-base font-semibold text-gray-900">
+                  {editId ? "Edit Certificate" : "Add New Certificate"}
+                </h2>
+              </div>
+              <button onClick={closeModal} className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
+                <X size={16} />
               </button>
             </div>
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title*</label>
-                  <input type="text" name="title" value={formData.title} onChange={handleInputChange} required className="w-full px-4 py-2 bg-white text-gray-800 border border-gray-300 rounded-md" placeholder="Earned..." />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Upload Sertifikat* <span className="text-gray-400 font-normal">(JPG, PNG, WebP, PDF, HTML)</span></label>
-                  <div onClick={() => fileInputRef.current.click()} className="w-full border-2 border-dashed border-gray-300 rounded-md p-4 flex flex-col items-center justify-center cursor-pointer hover:border-gray-500 hover:bg-gray-50 transition-colors" style={{ minHeight: "130px" }}>
-                    {selectedFile && selectedFile.type === "application/pdf" ? (
-                      <div className="flex flex-col items-center">
-                        <svg className="w-12 h-12 text-red-500 mb-2" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8.5 17.5c-.3 0-.5-.2-.5-.5v-5c0-.3.2-.5.5-.5h2c1.1 0 2 .9 2 2s-.9 2-2 2H9v1.5c0 .3-.2.5-.5.5zm.5-3h1.5c.6 0 1-.4 1-1s-.4-1-1-1H9v2zm4.5 3c-.3 0-.5-.2-.5-.5v-5c0-.3.2-.5.5-.5H15c1.4 0 2.5 1.1 2.5 2.5S16.4 17.5 15 17.5h-1.5zm.5-1H15c.8 0 1.5-.7 1.5-1.5S15.8 13 15 13h-1v3zm3.5 1c-.3 0-.5-.2-.5-.5V12H15c-.3 0-.5-.2-.5-.5s.2-.5.5-.5h3c.3 0 .5.2.5.5s-.2.5-.5.5h-1v5c0 .3-.2.5-.5.5z"/></svg>
-                        <p className="text-sm font-medium text-gray-700">{selectedFile.name}</p>
-                        <p className="text-xs text-gray-400 mt-1">PDF · {(selectedFile.size / 1024).toFixed(0)} KB</p>
+
+            {/* Modal body */}
+            <div className="overflow-y-auto flex-1 px-6 py-5">
+              <form id="cert-form" onSubmit={handleSubmit}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Title *</label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="Nama sertifikat..."
+                      className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+                      Upload File <span className="text-gray-400 normal-case font-normal">(JPG, PNG, WebP, PDF, HTML)</span>
+                    </label>
+                    <div
+                      onClick={() => fileInputRef.current.click()}
+                      className="w-full border-2 border-dashed border-gray-200 rounded-xl p-5 flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all"
+                      style={{ minHeight: "120px" }}
+                    >
+                      {selectedFile && selectedFile.type === "application/pdf" ? (
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center"><FileText size={20} className="text-red-500" /></div>
+                          <p className="text-sm font-medium text-gray-700 mt-1">{selectedFile.name}</p>
+                          <p className="text-xs text-gray-400">PDF · {(selectedFile.size / 1024).toFixed(0)} KB</p>
+                        </div>
+                      ) : selectedFile && (selectedFile.name.endsWith(".html") || selectedFile.name.endsWith(".htm")) ? (
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center"><Globe size={20} className="text-orange-500" /></div>
+                          <p className="text-sm font-medium text-gray-700 mt-1">{selectedFile.name}</p>
+                          <p className="text-xs text-gray-400">HTML · {(selectedFile.size / 1024).toFixed(0)} KB</p>
+                        </div>
+                      ) : previewUrl ? (
+                        <img src={previewUrl} alt="Preview" className="max-h-24 object-contain rounded-lg" />
+                      ) : formData.image_url ? (
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
+                            <Award size={20} className="text-green-500" />
+                          </div>
+                          <p className="text-xs text-gray-500">File sudah ada. Klik untuk ganti.</p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1 text-gray-400">
+                          <Upload size={24} />
+                          <p className="text-sm font-medium text-gray-600 mt-1">Klik untuk pilih file</p>
+                          <p className="text-xs">JPG, PNG, WebP, PDF, HTML · Maks 10MB</p>
+                        </div>
+                      )}
+                    </div>
+                    <input ref={fileInputRef} type="file" accept="image/*,.pdf,.html,.htm" onChange={handleFileChange} className="hidden" />
+                    {isUploading && (
+                      <div className="mt-2">
+                        <div className="w-full bg-gray-100 rounded-full h-1">
+                          <div className="bg-gray-700 h-1 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">Uploading {uploadProgress}%</p>
                       </div>
-                    ) : selectedFile && (selectedFile.name.endsWith(".html") || selectedFile.name.endsWith(".htm")) ? (
-                      <div className="flex flex-col items-center">
-                        <svg className="w-12 h-12 text-orange-500 mb-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.56L16.07 16.43L16.62 10.33H9.38L9.2 8.3H16.8L17 6.31H7L7.56 12.32H14.45L14.22 14.9L12 15.5L9.78 14.9L9.64 13.24H7.64L7.93 16.43L12 17.56M4.07 3H19.93L18.5 19.2L12 21L5.5 19.2L4.07 3Z"/></svg>
-                        <p className="text-sm font-medium text-gray-700">{selectedFile.name}</p>
-                        <p className="text-xs text-gray-400 mt-1">HTML · {(selectedFile.size / 1024).toFixed(0)} KB</p>
-                      </div>
-                    ) : previewUrl ? (
-                      <img src={previewUrl} alt="Preview" className="max-h-28 object-contain rounded-md" />
-                    ) : formData.image_url ? (
-                      <div className="flex flex-col items-center">
-                        <svg className="w-10 h-10 text-green-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        <p className="text-xs text-gray-500">File sudah ada. Klik untuk ganti.</p>
-                      </div>
-                    ) : (
-                      <>
-                        <svg className="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                        <p className="text-sm text-gray-500 font-medium">Klik untuk pilih file</p>
-                        <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP, PDF, HTML · Maks 10MB</p>
-                      </>
                     )}
                   </div>
-                  <input ref={fileInputRef} type="file" accept="image/*,.pdf,.html,.htm" onChange={handleFileChange} className="hidden" />
-                  {isUploading && (
-                    <div className="mt-2">
-                      <div className="w-full bg-gray-200 rounded-full h-1.5">
-                        <div className="bg-gray-600 h-1.5 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
-                      </div>
-                    </div>
-                  )}
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Course URL</label>
+                    <input
+                      type="url"
+                      name="course_url"
+                      value={formData.course_url}
+                      onChange={handleInputChange}
+                      placeholder="https://example.com/course"
+                      className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Category *</label>
+                    <select
+                      name="category"
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all"
+                    >
+                      <option value="certificate">Certificate</option>
+                      <option value="badge">Badge</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Course URL</label>
-                  <input type="url" name="course_url" value={formData.course_url} onChange={handleInputChange} className="w-full px-4 py-2 bg-white text-gray-800 border border-gray-300 rounded-md" placeholder="https://example.com/course" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category*</label>
-                  <select name="category" value={formData.category} onChange={handleInputChange} required className="w-full px-4 py-2 bg-white text-gray-800 border border-gray-300 rounded-md">
-                    <option value="certificate">Certificate</option>
-                    <option value="badge">Badge</option>
-                  </select>
-                </div>
-              </div>
-              <div className="mt-6 flex justify-end gap-3">
-                <button type="button" onClick={closeModal} className="px-4 py-2 border bg-white text-gray-800 border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50">Cancel</button>
-                <button type="submit" disabled={isSubmitting || isUploading} className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 disabled:opacity-50">
-                  {isUploading ? `Uploading... ${uploadProgress}%` : isSubmitting ? "Menyimpan..." : editId ? "Update Certificate" : "Add Certificate"}
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
+
+            {/* Modal footer */}
+            <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex-shrink-0">
+              <button type="button" onClick={closeModal} className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-white transition-colors">
+                Batal
+              </button>
+              <button
+                type="submit"
+                form="cert-form"
+                disabled={isSubmitting || isUploading}
+                className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-700 disabled:opacity-50 flex items-center gap-1.5 transition-colors"
+              >
+                <Save size={13} />
+                {isUploading ? `Uploading ${uploadProgress}%` : isSubmitting ? "Menyimpan..." : editId ? "Update" : "Tambah"}
+              </button>
+            </div>
           </div>
         </Modal>
 
         {/* Delete Modal */}
-        <Modal isOpen={deleteModalOpen} onRequestClose={closeDeleteModal} contentLabel="Delete Confirmation" className="modal" overlayClassName="modal-overlay">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-auto">
-            <h2 className="text-xl font-semibold text-red-600 mb-4">Delete Certificate</h2>
-            <p className="mb-6 text-gray-800">Are you sure you want to delete this certificate? This action cannot be undone.</p>
-            <div className="flex justify-end gap-3">
-              <button onClick={closeDeleteModal} className="px-4 py-2 border bg-white text-gray-800 border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50">Cancel</button>
-              <button onClick={handleDelete} className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">Delete</button>
+        <Modal
+          isOpen={deleteModalOpen}
+          onRequestClose={closeDeleteModal}
+          contentLabel="Delete Confirmation"
+          className="modal"
+          overlayClassName="modal-overlay"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm mx-auto">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <AlertTriangle size={18} className="text-red-600" />
+              </div>
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">Hapus Sertifikat</h2>
+                <p className="text-xs text-gray-400">Tindakan ini tidak bisa dibatalkan</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-5">Apakah Anda yakin ingin menghapus sertifikat ini?</p>
+            <div className="flex justify-end gap-2">
+              <button onClick={closeDeleteModal} className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">Batal</button>
+              <button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 flex items-center gap-1.5 transition-colors">
+                <Trash2 size={13} /> Hapus
+              </button>
             </div>
           </div>
         </Modal>

@@ -1,138 +1,136 @@
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "../supabase";
+
+const TAG_CLS = {
+  gray:   "bg-gray-100 text-gray-700",
+  blue:   "bg-blue-100 text-blue-700",
+  green:  "bg-green-100 text-green-700",
+  red:    "bg-red-100 text-red-700",
+  purple: "bg-purple-100 text-purple-700",
+  amber:  "bg-amber-100 text-amber-700",
+  cyan:   "bg-cyan-100 text-cyan-700",
+};
+
+function ExpIcon({ type, value, bg, color }) {
+  const style = { backgroundColor: bg, color };
+  if (type === "image") {
+    return (
+      <div className="h-10 w-10 rounded-full border border-gray-200 overflow-hidden flex-shrink-0 bg-white">
+        <img src={value} alt="" className="h-full w-full object-contain p-1"
+          onError={(e) => (e.target.style.display = "none")} />
+      </div>
+    );
+  }
+  if (type === "emoji") {
+    return (
+      <div className="h-10 w-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={style}>
+        {value}
+      </div>
+    );
+  }
+  // remix icon
+  return (
+    <div className="h-10 w-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={style}>
+      <i className={value}></i>
+    </div>
+  );
+}
 
 export default function ExperienceSection() {
+  const [items, setItems]     = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from("experience")
+      .select("*")
+      .order("sort_order", { ascending: true })
+      .then(({ data }) => {
+        setItems(data || []);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div>
+        <div className="flex justify-between items-center w-full mb-4">
+          <h2 className="text-[18px] font-bold text-gray-800 flex items-center gap-2">
+            <i className="ri-briefcase-4-fill"></i> Experience
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="rounded-xl border border-gray-200 bg-white p-4 animate-pulse">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="h-10 w-10 rounded-full bg-gray-100" />
+                <div className="space-y-1.5">
+                  <div className="h-3.5 bg-gray-100 rounded w-32" />
+                  <div className="h-2.5 bg-gray-100 rounded w-20" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <div className="h-2.5 bg-gray-100 rounded w-full" />
+                <div className="h-2.5 bg-gray-100 rounded w-4/5" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
-      {/* Header */}
       <div className="flex justify-between items-center w-full mb-4">
         <h2 className="text-[18px] font-bold text-gray-800 flex items-center gap-2">
           <i className="ri-briefcase-4-fill"></i> Experience
         </h2>
-        <Link to="https://www.linkedin.com/in/mfikriasyamjauhary" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
-          View more
-        </Link>
       </div>
 
-      {/* Content - Two column grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-
-        {/* Column 1 */}
-        <div className="space-y-2">
-
-          {/* Frontend / React Dev */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
+        {items.map((item) => (
+          <div
+            key={item.id}
+            className={`rounded-xl border border-gray-200 bg-white p-4 ${
+              item.is_wide ? "md:col-span-2" : ""
+            }`}
+          >
             <div className="flex items-center gap-3 mb-3">
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl">
-                <i className="ri-reactjs-line"></i>
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-gray-800">Frontend Developer</h3>
-                <p className="text-xs text-gray-600">React.js & Next.js Enthusiast</p>
-              </div>
-            </div>
-            <p className="text-sm text-gray-700 mb-3">
-              Building modern, responsive web applications using React.js and Next.js. Focused on clean UI, performance optimization, and great user experience.
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">React.js</span>
-              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Next.js</span>
-              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Tailwind CSS</span>
-            </div>
-          </div>
-
-          {/* Cybersecurity */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-xl">
-                <i className="ri-shield-keyhole-line"></i>
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-gray-800">Cybersecurity Engineer</h3>
-                <p className="text-xs text-gray-600">Penetration Tester</p>
-              </div>
-            </div>
-            <p className="text-sm text-gray-700 mb-3">
-              Passionate about cybersecurity with hands-on experience in penetration testing, vulnerability assessment, and ethical hacking techniques.
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">Pentesting</span>
-              <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">Ethical Hacking</span>
-              <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">CTF</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Column 2 */}
-        <div className="space-y-2">
-
-          {/* Next.js / Fullstack */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-10 w-10 rounded-full bg-gray-900 flex items-center justify-center text-white text-xl">
-                <i className="ri-code-box-line"></i>
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-gray-800">Fullstack Web Developer</h3>
-                <p className="text-xs text-gray-600">Next.js & Node.js</p>
-              </div>
-            </div>
-            <p className="text-sm text-gray-700 mb-3">
-              Developing fullstack applications with Next.js, integrating REST APIs, Firebase, and databases to deliver end-to-end web solutions.
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">Next.js</span>
-              <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">Node.js</span>
-              <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">Firebase</span>
-            </div>
-          </div>
-
-          {/* University */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <img
-                className="h-10 w-10 rounded-full object-contain border border-gray-200 p-1"
-                src="https://tse1.mm.bing.net/th/id/OIP.8UfP6OWKexvzq3fPZBchqgHaHa?pid=Api&P=0&h=180"
-                alt="UNUGIRI"
+              <ExpIcon
+                type={item.icon_type}
+                value={item.icon_value}
+                bg={item.icon_bg}
+                color={item.icon_color}
               />
               <div>
-                <h3 className="text-base font-semibold text-gray-800">Informatics Student</h3>
-                <p className="text-xs text-gray-600">Universitas Nahdlatul Ulama Sunan Giri</p>
+                <h3 className="text-base font-semibold text-gray-800">{item.title}</h3>
+                {item.subtitle && (
+                  <p className="text-xs text-gray-600">{item.subtitle}</p>
+                )}
               </div>
             </div>
-            <p className="text-sm text-gray-700 mb-3">
-              Currently pursuing a degree in Informatics, deepening knowledge in software engineering, networking, and cybersecurity fundamentals.
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Informatics</span>
-              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Networking</span>
-              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Present</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Web Security Project - Full width */}
-        <div className="md:col-span-2 rounded-xl border border-gray-200 bg-white p-4">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xl">
-              <i className="ri-bug-line"></i>
-            </div>
-            <div>
-              <h3 className="text-base font-semibold text-gray-800">Web Security & Vulnerability Research</h3>
-              <p className="text-xs text-gray-600">Personal Projects & CTF Challenges</p>
-            </div>
-          </div>
-          <p className="text-sm text-gray-700 mb-3">
-            Actively participating in Capture The Flag (CTF) competitions and web security research. Experienced in identifying OWASP Top 10 vulnerabilities including SQL Injection, XSS, and CSRF. Combining development skills with security mindset to build more secure applications.
-          </p>
-          <div className="flex gap-2 flex-wrap">
-            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">OWASP Top 10</span>
-            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">SQL Injection</span>
-            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">XSS</span>
-            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Burp Suite</span>
-            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Kali Linux</span>
-          </div>
-        </div>
+            {item.description && (
+              <p className="text-sm text-gray-700 mb-3">{item.description}</p>
+            )}
 
+            {item.tags?.length > 0 && (
+              <div className="flex gap-2 flex-wrap">
+                {item.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className={`text-xs px-2 py-1 rounded font-medium ${
+                      TAG_CLS[item.tag_color] || TAG_CLS.gray
+                    }`}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

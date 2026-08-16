@@ -4,6 +4,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // Protected route
 import ProtectedRoute from './components/common/ProtectedRoute';
 
+// Page view tracking
+import { usePageTracking } from './hooks/usePageTracking';
+
 // ─── Main Pages ──────────────────────────────────────
 import Resume from './pages/Resume';
 import HomePage from './pages/HomePage';
@@ -30,41 +33,52 @@ import DashboardReelsAnime from './pages/admin/ManageReelsAnime';
 import ManageQuotes from './pages/admin/ManageQuotes';
 import ManageAudio from './pages/admin/ManageAudio';
 import ManageChat from './pages/admin/ManageChat';
+import ManageEducation from './pages/admin/ManageEducation';
+import ManageExperience from './pages/admin/ManageExperience';
+
+function AppRoutes() {
+  usePageTracking();
+  return (
+    <Routes>
+
+      {/* ── Main Routes ───────────────── */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/resume" element={<Resume />} />
+      <Route path="/chat" element={<ChatRoom />} />
+
+      {/* ── Frontdev Routes ───────────── */}
+      <Route path="/projects" element={<Project />} />
+      <Route path="/certificates" element={<Certificate />} />
+      <Route path="/guestbook" element={<Guestbook />} />
+      <Route path="/github" element={<GithubRepo />} />
+      <Route path="/others" element={<OtherFrontDev />} />
+      <Route path="/blogs" element={<Blogs />} />
+      <Route path="/blogs/:slug" element={<DetailBlog />} />
+      <Route path="/writings/tailwind-ui-is-now-tailwind-plus" element={<Writings01 />} />
+
+      {/* Login */}
+      <Route path="/login" element={<Login />} />
+
+      {/* Admin / Dashboard (Protected) */}
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/dashboard/frontdev/manage-projects" element={<ProtectedRoute><AdminProject /></ProtectedRoute>} />
+      <Route path="/dashboard/frontdev/manage-certificates" element={<ProtectedRoute><AdminCertificate /></ProtectedRoute>} />
+      <Route path="/dashboard/frontdev/manage-blogs" element={<ProtectedRoute><ManageBlogs /></ProtectedRoute>} />
+      <Route path="/dashboard/manage-animes" element={<ProtectedRoute><DashboardAnime /></ProtectedRoute>} />
+      <Route path="/dashboard/animes/manage-reels" element={<ProtectedRoute><DashboardReelsAnime /></ProtectedRoute>} />
+      <Route path="/dashboard/creator/manage-quotes" element={<ProtectedRoute><ManageQuotes /></ProtectedRoute>} />
+      <Route path="/dashboard/creator/manage-audio" element={<ProtectedRoute><ManageAudio /></ProtectedRoute>} />
+      <Route path="/dashboard/manage-chat" element={<ProtectedRoute><ManageChat /></ProtectedRoute>} />
+      <Route path="/dashboard/manage-education" element={<ProtectedRoute><ManageEducation /></ProtectedRoute>} />
+      <Route path="/dashboard/manage-experience" element={<ProtectedRoute><ManageExperience /></ProtectedRoute>} />
+    </Routes>
+  );
+}
 
 function App() {
   return (
     <Router>
-      <Routes>
-
-        {/* ── Main Routes ───────────────── */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/resume" element={<Resume />} />
-        <Route path="/chat" element={<ChatRoom />} />
-
-        {/* ── Frontdev Routes ───────────── */}
-        <Route path="/projects" element={<Project />} />
-        <Route path="/certificates" element={<Certificate />} />
-        <Route path="/guestbook" element={<Guestbook />} />
-        <Route path="/github" element={<GithubRepo />} />
-        <Route path="/others" element={<OtherFrontDev />} />
-        <Route path="/blogs" element={<Blogs />} />
-        <Route path="/blogs/:slug" element={<DetailBlog />} />
-        <Route path="/writings/tailwind-ui-is-now-tailwind-plus" element={<Writings01 />} />
-
-        {/* Login */}
-        <Route path="/login" element={<Login />} />
-
-        {/* Admin / Dashboard (Protected) */}
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/dashboard/frontdev/manage-projects" element={<ProtectedRoute><AdminProject /></ProtectedRoute>} />
-        <Route path="/dashboard/frontdev/manage-certificates" element={<ProtectedRoute><AdminCertificate /></ProtectedRoute>} />
-        <Route path="/dashboard/frontdev/manage-blogs" element={<ProtectedRoute><ManageBlogs /></ProtectedRoute>} />
-        <Route path="/dashboard/manage-animes" element={<ProtectedRoute><DashboardAnime /></ProtectedRoute>} />
-        <Route path="/dashboard/animes/manage-reels" element={<ProtectedRoute><DashboardReelsAnime /></ProtectedRoute>} />
-        <Route path="/dashboard/creator/manage-quotes" element={<ProtectedRoute><ManageQuotes /></ProtectedRoute>} />
-        <Route path="/dashboard/creator/manage-audio" element={<ProtectedRoute><ManageAudio /></ProtectedRoute>} />
-        <Route path="/dashboard/manage-chat" element={<ProtectedRoute><ManageChat /></ProtectedRoute>} />
-      </Routes>
+      <AppRoutes />
     </Router>
   );
 }
