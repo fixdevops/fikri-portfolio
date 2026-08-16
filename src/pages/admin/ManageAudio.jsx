@@ -132,14 +132,14 @@ export default function ManageAudio() {
       <div className="min-h-screen">
         <div className="max-w-full mx-auto">
           <form onSubmit={handleSubmit}>
-            <div className="flex flex-wrap items-end gap-4 mb-4">
-              <div className="w-[200px]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Title <span className="text-red-500">*</span></label>
-                <input type="text" name="title" value={newAudio.title} onChange={handleInputChange} className="w-full px-3 py-2 bg-white text-gray-800 border border-gray-300 rounded-lg" required placeholder="Title" />
+                <input type="text" name="title" value={newAudio.title} onChange={handleInputChange} className="w-full px-3 py-2 bg-white text-gray-800 border border-gray-300 rounded-lg text-sm" required placeholder="Title" />
               </div>
-              <div className="w-[160px]">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Category <span className="text-red-500">*</span></label>
-                <select name="category" value={newAudio.category} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-800" required>
+                <select name="category" value={newAudio.category} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-800 text-sm" required>
                   <option value="sound_efect">Sound Efect</option>
                   <option value="quote_random">Quote Random</option>
                   <option value="arabic">Arabic</option>
@@ -148,30 +148,30 @@ export default function ManageAudio() {
                   <option value="india">India</option>
                 </select>
               </div>
-              <div className="flex-1 min-w-[200px]">
+              <div className="sm:col-span-2 lg:col-span-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Audio URL <span className="text-red-500">*</span></label>
-                <input type="url" name="audio_url" value={newAudio.audio_url} onChange={handleInputChange} placeholder="https://example.com/audio.mp3" className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-800" required />
+                <input type="url" name="audio_url" value={newAudio.audio_url} onChange={handleInputChange} placeholder="https://example.com/audio.mp3" className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-800 text-sm" required />
               </div>
-              <div className="flex gap-2 w-[260px]">
+              <div className="flex gap-2 items-end">
                 {editingId && (
-                  <button type="button" onClick={handleCancelEdit} className="w-full h-[42px] bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300">Cancel</button>
+                  <button type="button" onClick={handleCancelEdit} className="flex-1 h-[38px] bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 text-sm">Cancel</button>
                 )}
-                <button type="submit" disabled={isSubmitting} className="w-full h-[42px] text-white font-medium rounded-lg bg-gray-600 hover:bg-gray-700 disabled:opacity-70">
-                  {isSubmitting ? (editingId ? 'Updating...' : 'Adding...') : (editingId ? 'Update Audio' : 'Add Audio')}
+                <button type="submit" disabled={isSubmitting} className="flex-1 h-[38px] text-white font-medium rounded-lg bg-gray-600 hover:bg-gray-700 disabled:opacity-70 text-sm">
+                  {isSubmitting ? '...' : editingId ? 'Update' : 'Add'}
                 </button>
               </div>
             </div>
           </form>
 
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-800">List Audio Library</h2>
-            <div className="flex flex-wrap gap-2">
-              <button onClick={() => applyFilter('all')} className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${activeFilter === 'all' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>
-                All: {categoryCounts.all || 0}
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-base font-semibold text-gray-800">Audio Library</h2>
+            <div className="flex flex-wrap gap-1.5 justify-end">
+              <button onClick={() => applyFilter('all')} className={`px-2 py-1 text-xs font-medium rounded-full transition-colors ${activeFilter === 'all' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>
+                All ({categoryCounts.all || 0})
               </button>
               {Object.entries(categoryCounts).filter(([key]) => key !== 'all').map(([category, count]) => (
-                <button key={category} onClick={() => applyFilter(category)} className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${activeFilter === category ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>
-                  {formatCategory(category)}: {count}
+                <button key={category} onClick={() => applyFilter(category)} className={`px-2 py-1 text-xs font-medium rounded-full transition-colors ${activeFilter === category ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>
+                  {formatCategory(category)} ({count})
                 </button>
               ))}
             </div>
@@ -182,23 +182,26 @@ export default function ManageAudio() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Added</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                    <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredAudios.map(audio => (
                     <tr key={audio.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm font-medium text-gray-900 truncate max-w-xs">{audio.title}</div></td>
-                      <td className="px-6 py-4 whitespace-nowrap"><span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{formatCategory(audio.category)}</span></td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(audio.created_at)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end space-x-4">
-                          <a href={audio.audio_url} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900" title="Preview"><i className="ri-external-link-line text-lg"></i></a>
-                          <button onClick={() => handleEdit(audio)} className="text-gray-600 hover:text-gray-900" title="Edit"><i className="ri-pencil-line text-lg"></i></button>
-                          <button onClick={() => handleDelete(audio.id)} className="text-red-600 hover:text-red-900" title="Delete"><i className="ri-delete-bin-line text-lg"></i></button>
+                      <td className="px-4 py-3">
+                        <div className="text-sm font-medium text-gray-900 truncate max-w-[180px] sm:max-w-xs">{audio.title}</div>
+                        <span className="sm:hidden text-xs text-gray-500">{formatCategory(audio.category)}</span>
+                      </td>
+                      <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap"><span className="px-2 py-1 inline-flex text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{formatCategory(audio.category)}</span></td>
+                      <td className="hidden md:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-500">{formatDate(audio.created_at)}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end gap-3">
+                          <a href={audio.audio_url} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-gray-900" title="Preview"><i className="ri-external-link-line text-base"></i></a>
+                          <button onClick={() => handleEdit(audio)} className="text-gray-500 hover:text-gray-900" title="Edit"><i className="ri-pencil-line text-base"></i></button>
+                          <button onClick={() => handleDelete(audio.id)} className="text-red-500 hover:text-red-700" title="Delete"><i className="ri-delete-bin-line text-base"></i></button>
                         </div>
                       </td>
                     </tr>

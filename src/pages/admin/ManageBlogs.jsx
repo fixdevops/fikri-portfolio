@@ -210,40 +210,41 @@ export default function ManageBlogs() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Blog Post</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Published</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Read Time</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Blog Post</th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Published</th>
+                    <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Read Time</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {blogs.map((blog) => (
                     <tr key={blog.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-4">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
                           {blog.thumbnail && (
-                            <div className="flex-shrink-0 h-12 w-12 rounded-md overflow-hidden">
+                            <div className="flex-shrink-0 h-10 w-10 rounded-md overflow-hidden">
                               <img className="h-full w-full object-cover" src={blog.thumbnail} alt={blog.title} onError={(e) => e.target.style.display = 'none'} />
                             </div>
                           )}
-                          <div>
-                            <div className="font-medium text-gray-900 line-clamp-1">{blog.title}</div>
-                            <div className="text-xs text-gray-600 mt-1 line-clamp-1">/{blog.slug}</div>
+                          <div className="min-w-0">
+                            <div className="font-medium text-gray-900 truncate text-sm">{blog.title}</div>
+                            <div className="text-xs text-gray-400 truncate">/{blog.slug}</div>
+                            <span className={`sm:hidden inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium mt-1 ${blog.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{blog.status}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${blog.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{blog.status}</span>
+                      <td className="hidden sm:table-cell px-4 py-3">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${blog.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{blog.status}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(blog.published_at)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1"><i className="ri-time-line text-gray-400"></i><span className="text-sm text-gray-500">{blog.reading_time} min</span></div>
+                      <td className="hidden md:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-500">{formatDate(blog.published_at)}</td>
+                      <td className="hidden md:table-cell px-4 py-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1"><i className="ri-time-line text-gray-400 text-xs"></i><span className="text-sm text-gray-500">{blog.reading_time} min</span></div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end gap-3">
-                          <button onClick={() => handleEditClick(blog)} className="text-gray-600 hover:text-gray-900 p-1 rounded-full hover:bg-gray-50 transition-colors" title="Edit"><i className="ri-pencil-line text-lg"></i></button>
-                          <button onClick={() => handleDeleteClick(blog)} className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-50 transition-colors" title="Delete"><i className="ri-delete-bin-line text-lg"></i></button>
+                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => handleEditClick(blog)} className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-100 transition-colors" title="Edit"><i className="ri-pencil-line text-base"></i></button>
+                          <button onClick={() => handleDeleteClick(blog)} className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors" title="Delete"><i className="ri-delete-bin-line text-base"></i></button>
                         </div>
                       </td>
                     </tr>

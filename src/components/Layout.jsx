@@ -75,16 +75,16 @@ export default function Layout({ children }) {
             <i className="ri-menu-2-line"></i>
           </button>
 
-          <h1 className="text-lg md:text-xl font-semibold text-gray-800">
+          <h1 className="text-base md:text-lg font-semibold text-gray-800 truncate flex-1 text-center md:text-left">
             {currentTitle}
           </h1>
 
           <button
             onClick={() => setShowLogoutModal(true)}
-            className="text-sm text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-sm flex items-center space-x-2"
+            className="text-sm text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 shrink-0"
           >
             <i className="ri-logout-box-r-line"></i>
-            <span>Logout</span>
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
 

@@ -307,7 +307,7 @@ export default function AdminCertificates() {
 
         {/* Add/Edit Modal */}
         <Modal isOpen={isModalOpen} onRequestClose={closeModal} contentLabel={editId ? "Edit Certificate" : "Add Certificate"} className="modal" overlayClassName="modal-overlay">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-auto">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-auto max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">{editId ? "Edit Certificate" : "Add New Certificate"}</h2>
               <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">

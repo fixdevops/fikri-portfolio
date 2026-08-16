@@ -248,7 +248,7 @@ export default function ManageAnime() {
                     ) : (
                       <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400"><i className="ri-image-line text-3xl"></i></div>
                     )}
-                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition">
                       <button onClick={() => handleEdit(anime)} className="p-1.5 bg-white rounded-full shadow hover:bg-gray-50" title="Edit"><i className="ri-edit-line text-sm text-gray-700"></i></button>
                       <button onClick={() => handleDelete(anime.id)} className="p-1.5 bg-white rounded-full shadow hover:bg-red-50" title="Delete"><i className="ri-delete-bin-line text-sm text-red-500"></i></button>
                     </div>

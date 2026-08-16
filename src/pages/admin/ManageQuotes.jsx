@@ -156,20 +156,24 @@ const ManageQuotes = () => {
           )}
 
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="grid grid-cols-12 bg-gray-100 p-4 font-medium text-gray-700">
-              <div className="col-span-6 md:col-span-5">Quote</div>
-              <div className="col-span-3 md:col-span-2">Author</div>
-              <div className="col-span-2 hidden md:block">Category</div>
-              <div className="col-span-3 md:col-span-2">Status</div>
-              <div className="col-span-3 md:col-span-1">Actions</div>
+            <div className="grid grid-cols-12 bg-gray-100 p-3 font-medium text-gray-700 text-xs">
+              <div className="col-span-7 sm:col-span-5">Quote</div>
+              <div className="col-span-5 sm:col-span-3">Author</div>
+              <div className="hidden sm:block sm:col-span-2">Category</div>
+              <div className="hidden sm:block sm:col-span-1">Status</div>
+              <div className="hidden sm:block sm:col-span-1">Actions</div>
             </div>
 
             {filteredQuotes.length > 0 ? (
               filteredQuotes.map((quote) => (
-                <div key={quote.id} className="grid grid-cols-12 p-4 border-b border-gray-200 hover:bg-gray-50">
-                  <div className="col-span-6 md:col-span-5 text-sm text-gray-800 line-clamp-2">"{quote.text}"</div>
-                  <div className="col-span-3 md:col-span-2 text-sm text-gray-600">{quote.author}</div>
-                  <div className="col-span-2 hidden md:block">
+                <div key={quote.id} className="grid grid-cols-12 p-3 border-b border-gray-200 hover:bg-gray-50 items-center">
+                  <div className="col-span-7 sm:col-span-5 text-sm text-gray-800 line-clamp-2 pr-2">"{quote.text}"</div>
+                  <div className="col-span-3 sm:col-span-3 text-xs text-gray-600 truncate pr-2">{quote.author}</div>
+                  <div className="col-span-2 sm:hidden flex flex-col gap-1 items-end">
+                    <button onClick={() => handleEdit(quote)} className="text-blue-500 hover:text-blue-700 p-1"><i className="ri-edit-line text-base"></i></button>
+                    <button onClick={() => handleDelete(quote.id)} className="text-red-500 hover:text-red-700 p-1"><i className="ri-delete-bin-line text-base"></i></button>
+                  </div>
+                  <div className="hidden sm:block sm:col-span-2">
                     <span className={`text-xs px-2 py-1 rounded-[4px] ${quote.category === 'motivation' ? 'bg-blue-100 text-blue-800' : quote.category === 'life' ? 'bg-green-100 text-green-800' : quote.category === 'love' ? 'bg-pink-100 text-pink-800' : quote.category === 'wisdom' ? 'bg-purple-100 text-purple-800' : quote.category === 'funny' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
                       {quote.category === 'motivation' && 'Motivasi'}
                       {quote.category === 'life' && 'Sindiran'}
@@ -179,16 +183,16 @@ const ManageQuotes = () => {
                       {quote.category === 'other' && 'Lainnya'}
                     </span>
                   </div>
-                  <div className="col-span-3 md:col-span-2">
-                    <select className={`text-xs px-2 py-1 rounded border ${quote.status === 'pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : quote.status === 'approved' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'}`} value={quote.status} onChange={(e) => handleStatusChange(quote.id, e.target.value)}>
+                  <div className="hidden sm:block sm:col-span-1">
+                    <select className={`text-xs px-1 py-1 rounded border w-full ${quote.status === 'pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : quote.status === 'approved' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'}`} value={quote.status} onChange={(e) => handleStatusChange(quote.id, e.target.value)}>
                       <option value="pending">Pending</option>
                       <option value="approved">Approved</option>
                       <option value="rejected">Rejected</option>
                     </select>
                   </div>
-                  <div className="col-span-3 md:col-span-1 flex items-center gap-2">
-                    <button onClick={() => handleEdit(quote)} className="text-blue-500 hover:text-blue-700" title="Edit"><i className="ri-edit-line"></i></button>
-                    <button onClick={() => handleDelete(quote.id)} className="text-red-500 hover:text-red-700" title="Delete"><i className="ri-delete-bin-line"></i></button>
+                  <div className="hidden sm:flex sm:col-span-1 items-center gap-2">
+                    <button onClick={() => handleEdit(quote)} className="text-blue-500 hover:text-blue-700"><i className="ri-edit-line"></i></button>
+                    <button onClick={() => handleDelete(quote.id)} className="text-red-500 hover:text-red-700"><i className="ri-delete-bin-line"></i></button>
                   </div>
                 </div>
               ))

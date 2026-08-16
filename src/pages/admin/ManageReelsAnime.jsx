@@ -266,7 +266,7 @@ export default function DashboardStoryAnime() {
           </Modal>
 
           {/* Video Modal */}
-          <Modal isOpen={isVideoModalOpen} onRequestClose={closeVideoModal} contentLabel="Video Player" className="modal-content bg-black rounded-lg overflow-hidden max-w-4xl w-full mx-auto my-8" overlayClassName="modal-overlay fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4">
+          <Modal isOpen={isVideoModalOpen} onRequestClose={closeVideoModal} contentLabel="Video Player" className="modal-content bg-black rounded-lg overflow-hidden max-w-4xl w-full mx-auto my-8 relative" overlayClassName="modal-overlay fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4">
             <div className="relative pt-[56.25%]">
               <video src={currentVideoUrl} controls autoPlay className="absolute top-0 left-0 w-full h-full" />
             </div>

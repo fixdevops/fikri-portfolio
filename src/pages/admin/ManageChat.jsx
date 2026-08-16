@@ -64,7 +64,7 @@ export default function ManageChat() {
 
   return (
     <Layout>
-      <div className="flex flex-col h-[75vh]">
+      <div className="flex flex-col" style={{ height: "calc(100dvh - 180px)", minHeight: "400px" }}>
         {/* Messages */}
         <div className="flex-1 overflow-y-auto space-y-2 mb-4 pr-1">
           {loading ? (
