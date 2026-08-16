@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../supabase';
 import Layout from '../../components/Layout';
+import { Search, Pencil, Trash2, X, Save, Quote } from 'lucide-react';
 
 const ManageQuotes = () => {
   const [quotes, setQuotes] = useState([]);
@@ -97,8 +98,8 @@ const ManageQuotes = () => {
         <div className="max-w-full mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="relative">
-              <input type="text" placeholder="Cari quote atau author..." className="w-full p-3 pl-10 rounded-lg border border-gray-300 bg-white text-gray-800" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-              <div className="absolute left-3 top-3.5 text-gray-400"><i className="ri-search-line"></i></div>
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input type="text" placeholder="Cari quote atau author..." className="w-full py-2.5 pl-9 pr-4 rounded-lg border border-gray-200 bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
             <select className="w-full p-3 rounded-lg border border-gray-300 bg-white text-gray-800" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
               <option value="all">Semua Status</option>
@@ -121,9 +122,9 @@ const ManageQuotes = () => {
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
                 <div className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold text-gray-800">Edit Quote</h2>
-                    <button onClick={() => setEditingQuote(null)} className="text-gray-500 hover:text-gray-700"><i className="ri-close-line text-xl"></i></button>
+            <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-base font-bold flex items-center gap-2 text-gray-800"><Pencil size={15} className="text-gray-500" /> Edit Quote</h2>
+                    <button onClick={() => setEditingQuote(null)} className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"><X size={15} /></button>
                   </div>
                   <form onSubmit={handleUpdate} className="space-y-4">
                     <div>
@@ -145,9 +146,9 @@ const ManageQuotes = () => {
                         <option value="other">Lainnya</option>
                       </select>
                     </div>
-                    <div className="flex justify-end gap-3 pt-2">
-                      <button type="button" onClick={() => setEditingQuote(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
-                      <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Simpan Perubahan</button>
+                    <div className="flex justify-end gap-2 pt-2">
+                      <button type="button" onClick={() => setEditingQuote(null)} className="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-1.5 transition-colors"><X size={13} /> Batal</button>
+                      <button type="submit" className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-700 flex items-center gap-1.5 transition-colors"><Save size={13} /> Simpan</button>
                     </div>
                   </form>
                 </div>
@@ -170,8 +171,8 @@ const ManageQuotes = () => {
                   <div className="col-span-7 sm:col-span-5 text-sm text-gray-800 line-clamp-2 pr-2">"{quote.text}"</div>
                   <div className="col-span-3 sm:col-span-3 text-xs text-gray-600 truncate pr-2">{quote.author}</div>
                   <div className="col-span-2 sm:hidden flex flex-col gap-1 items-end">
-                    <button onClick={() => handleEdit(quote)} className="text-blue-500 hover:text-blue-700 p-1"><i className="ri-edit-line text-base"></i></button>
-                    <button onClick={() => handleDelete(quote.id)} className="text-red-500 hover:text-red-700 p-1"><i className="ri-delete-bin-line text-base"></i></button>
+                    <button onClick={() => handleEdit(quote)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"><Pencil size={13} /></button>
+                    <button onClick={() => handleDelete(quote.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"><Trash2 size={13} /></button>
                   </div>
                   <div className="hidden sm:block sm:col-span-2">
                     <span className={`text-xs px-2 py-1 rounded-[4px] ${quote.category === 'motivation' ? 'bg-blue-100 text-blue-800' : quote.category === 'life' ? 'bg-green-100 text-green-800' : quote.category === 'love' ? 'bg-pink-100 text-pink-800' : quote.category === 'wisdom' ? 'bg-purple-100 text-purple-800' : quote.category === 'funny' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
@@ -190,14 +191,17 @@ const ManageQuotes = () => {
                       <option value="rejected">Rejected</option>
                     </select>
                   </div>
-                  <div className="hidden sm:flex sm:col-span-1 items-center gap-2">
-                    <button onClick={() => handleEdit(quote)} className="text-blue-500 hover:text-blue-700"><i className="ri-edit-line"></i></button>
-                    <button onClick={() => handleDelete(quote.id)} className="text-red-500 hover:text-red-700"><i className="ri-delete-bin-line"></i></button>
+                  <div className="hidden sm:flex sm:col-span-1 items-center gap-1.5">
+                    <button onClick={() => handleEdit(quote)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"><Pencil size={13} /></button>
+                    <button onClick={() => handleDelete(quote.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"><Trash2 size={13} /></button>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="p-8 text-center text-gray-500">Tidak ada quotes yang ditemukan</div>
+              <div className="p-8 text-center text-gray-400">
+                <Quote size={28} className="mx-auto mb-2 opacity-40" />
+                <p className="text-sm">Tidak ada quotes yang ditemukan</p>
+              </div>
             )}
           </div>
         </div>

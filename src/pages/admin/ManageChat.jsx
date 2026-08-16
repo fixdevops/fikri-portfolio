@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../supabase";
 import Layout from "../../components/Layout";
+import { Trash2, Send, MessageSquare } from "lucide-react";
 
 export default function ManageChat() {
   const [messages, setMessages] = useState([]);
@@ -68,9 +69,12 @@ export default function ManageChat() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto space-y-2 mb-4 pr-1">
           {loading ? (
-            <p className="text-center text-gray-400 py-8">Loading...</p>
+            <p className="text-center text-gray-400 py-8 text-sm">Loading...</p>
           ) : messages.length === 0 ? (
-            <p className="text-center text-gray-400 py-8">Belum ada pesan</p>
+            <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+              <MessageSquare size={32} className="mb-2 opacity-40" />
+              <p className="text-sm">Belum ada pesan</p>
+            </div>
           ) : (
             messages.map((msg) => (
               <div
@@ -107,10 +111,10 @@ export default function ManageChat() {
                     </div>
                     <button
                       onClick={() => handleDelete(msg.id)}
-                      className="text-gray-300 hover:text-red-400 text-xs flex-shrink-0 opacity-0 hover:opacity-100 transition-opacity"
+                      className="text-gray-300 hover:text-red-400 text-xs flex-shrink-0 opacity-0 hover:opacity-100 transition-opacity p-1 rounded"
                       title="Hapus"
                     >
-                      <i className="ri-delete-bin-line"></i>
+                      <Trash2 size={12} />
                     </button>
                   </div>
                 </div>
@@ -133,9 +137,9 @@ export default function ManageChat() {
           <button
             type="submit"
             disabled={sending || !replyText.trim()}
-            className="px-4 py-2 bg-gray-800 text-white rounded-xl text-sm hover:bg-gray-700 disabled:opacity-40 flex items-center gap-1"
+            className="px-4 py-2 bg-gray-800 text-white rounded-xl text-sm hover:bg-gray-700 disabled:opacity-40 flex items-center gap-1.5 flex-shrink-0"
           >
-            <i className="ri-send-plane-fill"></i>
+            <Send size={13} />
             <span className="hidden sm:inline">Kirim</span>
           </button>
         </form>

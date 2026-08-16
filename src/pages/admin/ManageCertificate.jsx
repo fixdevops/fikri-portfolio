@@ -3,6 +3,19 @@ import { supabase } from "../../supabase";
 import { uploadAsset, pathFromPublicUrl, deleteAsset } from "../../lib/supabaseStorage";
 import Modal from 'react-modal';
 import Layout from "../../components/Layout";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Pin,
+  Award,
+  X,
+  Save,
+  Upload,
+  FileText,
+  Globe,
+  AlertTriangle,
+} from "lucide-react";
 
 Modal.setAppElement('#root');
 
@@ -243,59 +256,74 @@ export default function AdminCertificates() {
     <Layout>
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-full mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <button onClick={openModal} className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Add New Certificate</button>
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-2">
+              <Award size={17} className="text-gray-400" />
+              <span className="text-sm font-semibold text-gray-700">
+                {loading ? "Memuat..." : `${certificates.length} sertifikat`}
+              </span>
+            </div>
+            <button onClick={openModal} className="flex items-center gap-1.5 px-3.5 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors">
+              <Plus size={14} /> Add Certificate
+            </button>
           </div>
 
           {loading ? (
-            <div className="p-6 text-center"><p>Loading certificates...</p></div>
+            <div className="text-center py-12">
+              <div className="w-8 h-8 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin mx-auto" />
+            </div>
           ) : certificates.length === 0 ? (
-            <div className="p-6 text-center"><p>No certificates found. Add your first certificate!</p></div>
+            <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-xl">
+              <Award size={32} className="mx-auto text-gray-300 mb-2" />
+              <p className="text-sm text-gray-500">Belum ada sertifikat.</p>
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preview</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Earned</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            <div className="overflow-x-auto -mx-4 md:mx-0">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 uppercase">Preview</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 uppercase">Earned</th>
+                    <th className="hidden sm:table-cell px-4 py-2.5 text-left text-xs font-semibold text-gray-400 uppercase">Category</th>
+                    <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-400 uppercase">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-50">
                   {certificates.map((certificate) => (
-                    <tr key={certificate.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex-shrink-0 h-16 w-16">
+                    <tr key={certificate.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="h-12 w-12 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
                           {certificate.image_url?.endsWith(".pdf") ? (
-                            <div className="h-16 w-16 flex items-center justify-center bg-red-50 rounded-md">
-                              <svg className="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5z"/></svg>
-                            </div>
+                            <FileText size={20} className="text-red-400" />
                           ) : certificate.image_url?.endsWith(".html") || certificate.image_url?.endsWith(".htm") ? (
-                            <div className="h-16 w-16 flex items-center justify-center bg-orange-50 rounded-md">
-                              <svg className="w-8 h-8 text-orange-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.56L16.07 16.43L16.62 10.33H9.38L9.2 8.3H16.8L17 6.31H7L7.56 12.32H14.45L14.22 14.9L12 15.5L9.78 14.9L9.64 13.24H7.64L7.93 16.43L12 17.56M4.07 3H19.93L18.5 19.2L12 21L5.5 19.2L4.07 3Z"/></svg>
-                            </div>
+                            <Globe size={20} className="text-orange-400" />
                           ) : (
-                            <img className="h-16 w-16 object-contain rounded-md" src={certificate.image_url} alt={certificate.title} onError={(e) => { e.target.src = 'https://via.placeholder.com/100'; }} />
+                            <img className="h-full w-full object-contain" src={certificate.image_url} alt={certificate.title} onError={(e) => { e.target.src = 'https://via.placeholder.com/100'; }} />
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{certificate.title}</div>
+                      <td className="px-4 py-3">
+                        <div className="text-sm font-medium text-gray-900 truncate max-w-[150px] sm:max-w-xs">{certificate.title}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{certificate.category || "certificate"}</div>
+                      <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">{certificate.category || "certificate"}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => handlePin(certificate)}
-                          className={`mr-4 text-lg ${certificate.is_pinned ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-300 hover:text-yellow-400'}`}
-                          title={certificate.is_pinned ? "Unpin dari homepage" : "Pin ke homepage"}
-                        >
-                          <i className="ri-pushpin-fill"></i>
-                        </button>
-                        <button onClick={() => handleEdit(certificate)} className="text-gray-600 hover:text-gray-900 mr-4">Edit</button>
-                        <button onClick={() => openDeleteModal(certificate.id)} className="text-red-600 hover:text-red-900">Delete</button>
+                      <td className="px-4 py-3 whitespace-nowrap text-right">
+                        <div className="flex justify-end gap-1">
+                          <button
+                            onClick={() => handlePin(certificate)}
+                            className={`p-1.5 rounded-lg transition-colors ${certificate.is_pinned ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-50' : 'text-gray-300 hover:text-yellow-400 hover:bg-gray-100'}`}
+                            title={certificate.is_pinned ? "Unpin" : "Pin ke homepage"}
+                          >
+                            <Pin size={14} className={certificate.is_pinned ? "fill-current" : ""} />
+                          </button>
+                          <button onClick={() => handleEdit(certificate)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
+                            <Pencil size={14} />
+                          </button>
+                          <button onClick={() => openDeleteModal(certificate.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -2,29 +2,123 @@ import React, { useEffect, useState } from "react";
 import Layout from "../../components/Layout";
 import { Link } from "react-router-dom";
 import { supabase } from "../../supabase";
+import {
+  Tv2,
+  Film,
+  FolderKanban,
+  Award,
+  BookOpen,
+  Quote,
+  Music2,
+  TrendingUp,
+  ArrowRight,
+  RefreshCw,
+  AlertCircle,
+} from "lucide-react";
 
-// Define the dashboard sections with their details
 const dashboardSections = [
-  { label: "Animes", path: "/dashboard/manage-animes", tableName: "animes", icon: "🎬" },
-  { label: "Anime Reels", path: "/dashboard/animes/manage-reels", tableName: "anime_story", icon: "🎞️" },
-  { label: "Projects", path: "/dashboard/frontdev/manage-projects", tableName: "my_project", icon: "💡" },
-  { label: "Certificates", path: "/dashboard/frontdev/manage-certificates", tableName: "my_certificate", icon: "📄" },
-  { label: "Blogs", path: "/dashboard/frontdev/manage-blogs", tableName: "my_blogs", icon: "✍️" },
-  { label: "Quotes", path: "/dashboard/creator/manage-quotes", tableName: "my_quotes", icon: "💬" },
-  { label: "Audio", path: "/dashboard/creator/manage-audio", tableName: "my_audios", icon: "🎧" },
+  {
+    label: "Animes",
+    path: "/dashboard/manage-animes",
+    tableName: "animes",
+    icon: Tv2,
+    color: "bg-violet-50 text-violet-600",
+    border: "border-violet-100",
+  },
+  {
+    label: "Anime Reels",
+    path: "/dashboard/animes/manage-reels",
+    tableName: "anime_story",
+    icon: Film,
+    color: "bg-pink-50 text-pink-600",
+    border: "border-pink-100",
+  },
+  {
+    label: "Projects",
+    path: "/dashboard/frontdev/manage-projects",
+    tableName: "my_project",
+    icon: FolderKanban,
+    color: "bg-blue-50 text-blue-600",
+    border: "border-blue-100",
+  },
+  {
+    label: "Certificates",
+    path: "/dashboard/frontdev/manage-certificates",
+    tableName: "my_certificate",
+    icon: Award,
+    color: "bg-amber-50 text-amber-600",
+    border: "border-amber-100",
+  },
+  {
+    label: "Blogs",
+    path: "/dashboard/frontdev/manage-blogs",
+    tableName: "my_blogs",
+    icon: BookOpen,
+    color: "bg-emerald-50 text-emerald-600",
+    border: "border-emerald-100",
+  },
+  {
+    label: "Quotes",
+    path: "/dashboard/creator/manage-quotes",
+    tableName: "my_quotes",
+    icon: Quote,
+    color: "bg-orange-50 text-orange-600",
+    border: "border-orange-100",
+  },
+  {
+    label: "Audio",
+    path: "/dashboard/creator/manage-audio",
+    tableName: "my_audios",
+    icon: Music2,
+    color: "bg-cyan-50 text-cyan-600",
+    border: "border-cyan-100",
+  },
 ];
+
+function StatCard({ item, count, loading }) {
+  const Icon = item.icon;
+  return (
+    <Link
+      to={item.path}
+      className={`group bg-white border ${item.border} rounded-xl p-5 flex items-center gap-4 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5`}
+    >
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${item.color}`}>
+        <Icon size={22} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide truncate">
+          {item.label}
+        </p>
+        {loading ? (
+          <div className="h-7 w-16 bg-gray-100 rounded-md animate-pulse mt-1" />
+        ) : (
+          <p className="text-2xl font-bold text-gray-900 leading-none mt-1">
+            {count ?? "—"}
+          </p>
+        )}
+      </div>
+      <ArrowRight
+        size={16}
+        className="text-gray-300 group-hover:text-gray-500 flex-shrink-0 transition-colors"
+      />
+    </Link>
+  );
+}
 
 export default function Dashboard() {
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      setLoading(true);
-      setError(null);
-      const newStats = {};
-      for (const item of dashboardSections) {
+  const fetchStats = async () => {
+    setLoading(true);
+    setError(null);
+    const newStats = {};
+    let hasError = false;
+
+    await Promise.all(
+      dashboardSections.map(async (item) => {
         try {
           const { count, error: countError } = await supabase
             .from(item.tableName)
@@ -33,117 +127,119 @@ export default function Dashboard() {
           newStats[item.tableName] = count;
         } catch (err) {
           console.error(`Gagal mengambil data untuk ${item.tableName}:`, err);
-          setError("Gagal memuat beberapa data dashboard. Silakan coba lagi.");
-          newStats[item.tableName] = 0;
+          hasError = true;
+          newStats[item.tableName] = null;
         }
-      }
-      setStats(newStats);
-      setLoading(false);
-    };
+      })
+    );
 
+    if (hasError) setError("Beberapa data gagal dimuat.");
+    setStats(newStats);
+    setLoading(false);
+    setLastUpdated(new Date());
+  };
+
+  useEffect(() => {
     fetchStats();
   }, []);
 
+  const totalItems = Object.values(stats).reduce(
+    (sum, v) => sum + (v || 0),
+    0
+  );
+
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
+      {/* Summary row */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">Overview</h2>
+          <p className="text-sm text-gray-400 mt-0.5">
+            {loading
+              ? "Memuat data..."
+              : `Total ${totalItems} item di semua konten`}
+          </p>
+        </div>
+        <button
+          onClick={fetchStats}
+          disabled={loading}
+          className="self-start sm:self-auto flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+        >
+          <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+          Refresh
+        </button>
+      </div>
 
-        {/* Quick Links Section */}
-        <div className="mb-8 p-4 bg-white rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Tautan Cepat</h2>
-          <div className="flex flex-wrap gap-4 justify-start">
-            {dashboardSections.map((item) => (
+      {/* Error banner */}
+      {error && (
+        <div className="mb-4 flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
+          <AlertCircle size={15} className="flex-shrink-0" />
+          {error}
+        </div>
+      )}
+
+      {/* Stats grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+        {dashboardSections.map((item) => (
+          <StatCard
+            key={item.tableName}
+            item={item}
+            count={stats[item.tableName]}
+            loading={loading}
+          />
+        ))}
+
+        {/* Total card */}
+        {!loading && (
+          <div className="bg-gray-900 rounded-xl p-5 flex items-center gap-4 sm:col-span-2 lg:col-span-1">
+            <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
+              <TrendingUp size={22} className="text-white" />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                Total Semua
+              </p>
+              <p className="text-2xl font-bold text-white leading-none mt-1">
+                {totalItems}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Quick access */}
+      <div className="border border-gray-100 rounded-xl p-5">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">
+          Akses Cepat
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {dashboardSections.map((item) => {
+            const Icon = item.icon;
+            return (
               <Link
                 key={item.tableName}
                 to={item.path}
-                className="flex items-center space-x-2 px-4 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full hover:bg-indigo-100 hover:border-indigo-400 transition-all duration-200 text-sm font-medium"
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all hover:shadow-sm ${item.border} ${item.color} bg-opacity-50 hover:bg-opacity-100`}
               >
-                <span className="text-lg">{item.icon}</span>
-                <span>{item.label}</span>
+                <Icon size={13} />
+                {item.label}
               </Link>
-            ))}
-          </div>
+            );
+          })}
         </div>
-
-        {loading && (
-          <div className="flex items-center justify-center p-6 bg-white rounded-lg shadow-md mb-8">
-            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <p className="text-gray-700">Memuat data dashboard...</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-8" role="alert">
-            <strong className="font-bold">Error!</strong>
-            <span className="block sm:inline"> {error}</span>
-          </div>
-        )}
-
-        {!loading && !error && (
-          <>
-            {/* Overview Cards Section */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-              {dashboardSections.map((item) => (
-                <div
-                  key={item.tableName}
-                  className="bg-white border border-gray-200 p-6 rounded-lg flex flex-col items-start space-y-3 shadow-sm"
-                >
-                  <div className="text-4xl mb-2">{item.icon}</div>
-                  <h2 className="text-xl font-semibold text-gray-800">
-                    {item.label}
-                  </h2>
-                  <p className="text-md text-gray-600">
-                    Total Item:{" "}
-                    <span className="font-bold text-indigo-700">
-                      {stats[item.tableName] !== undefined ? stats[item.tableName] : "N/A"}
-                    </span>
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* Analytics and Recent Activities Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Ringkasan Analitik</h2>
-                <div className="w-full h-48 bg-gray-100 rounded-md flex items-center justify-center text-gray-500 border border-dashed border-gray-300">
-                  <p>Placeholder Grafik (misalnya, Grafik Kunjungan Halaman)</p>
-                </div>
-                <p className="text-gray-600 mt-4 text-sm">
-                  Data analitik akan ditampilkan di sini untuk memberikan wawasan tentang kinerja situs atau aplikasi Anda.
-                </p>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Aktivitas Terbaru</h2>
-                <ul className="divide-y divide-gray-200">
-                  <li className="py-2 text-gray-700">
-                    <span className="font-medium text-indigo-600">Anime:</span> "One Piece" ditambahkan oleh Admin (2 jam lalu)
-                  </li>
-                  <li className="py-2 text-gray-700">
-                    <span className="font-medium text-indigo-600">Blog:</span> Artikel "Memulai React" diperbarui (1 hari lalu)
-                  </li>
-                  <li className="py-2 text-gray-700">
-                    <span className="font-medium text-indigo-600">Proyek:</span> "Portofolio V2" diunggah (3 hari lalu)
-                  </li>
-                  <li className="py-2 text-gray-700">
-                    <span className="font-medium text-indigo-600">Kutipan:</span> Kutipan baru ditambahkan (1 minggu lalu)
-                  </li>
-                  <li className="py-2 text-gray-700">
-                    <span className="font-medium text-indigo-600">Sertifikat:</span> Sertifikat "React Advanced" ditambahkan (2 minggu lalu)
-                  </li>
-                </ul>
-                <p className="text-gray-600 mt-4 text-sm">
-                  Bagian ini dapat menampilkan log aktivitas terbaru.
-                </p>
-              </div>
-            </div>
-          </>
-        )}
       </div>
+
+      {/* Last updated */}
+      {lastUpdated && (
+        <p className="text-[11px] text-gray-300 text-right mt-4">
+          Terakhir diperbarui:{" "}
+          {lastUpdated.toLocaleTimeString("id-ID", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          })}
+        </p>
+      )}
     </Layout>
   );
 }

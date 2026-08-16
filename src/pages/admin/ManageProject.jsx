@@ -2,6 +2,19 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../supabase";
 import { uploadAsset, pathFromPublicUrl, deleteAsset } from "../../lib/supabaseStorage";
 import Layout from "../../components/Layout";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Pin,
+  ImageIcon,
+  Save,
+  X,
+  FolderKanban,
+  ExternalLink,
+  Github,
+  AlertTriangle,
+} from "lucide-react";
 
 export default function AdminProjects() {
   const [projects, setProjects] = useState([]);
@@ -232,8 +245,8 @@ export default function AdminProjects() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="w-full bg-white border border-gray-200 rounded-xl p-5 mb-6">
-            <h2 className="text-base font-semibold text-gray-800 mb-4">
-              {editId ? "✏️ Edit Project" : "➕ Add New Project"}
+            <h2 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              {editId ? <><Pencil size={15} className="text-gray-500" /> Edit Project</> : <><Plus size={15} className="text-gray-500" /> Add New Project</>}
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -257,11 +270,17 @@ export default function AdminProjects() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Preview URL</label>
-                <input type="url" name="linkPreview" value={formData.linkPreview} onChange={handleInputChange} placeholder="https://..." className="w-full px-3 py-2 bg-white text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 text-sm" />
+                <div className="relative">
+                  <ExternalLink size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input type="url" name="linkPreview" value={formData.linkPreview} onChange={handleInputChange} placeholder="https://..." className="w-full pl-8 pr-3 py-2 bg-white text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 text-sm" />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Github URL</label>
-                <input type="url" name="codeUrl" value={formData.codeUrl} onChange={handleInputChange} placeholder="https://github.com/..." className="w-full px-3 py-2 bg-white text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 text-sm" />
+                <div className="relative">
+                  <Github size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input type="url" name="codeUrl" value={formData.codeUrl} onChange={handleInputChange} placeholder="https://github.com/..." className="w-full pl-8 pr-3 py-2 bg-white text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 text-sm" />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail</label>
@@ -274,7 +293,7 @@ export default function AdminProjects() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 text-gray-400 px-2">
-                      <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                      <ImageIcon size={14} className="shrink-0" />
                       <span className="text-xs">Klik untuk upload thumbnail</span>
                     </div>
                   )}
@@ -337,16 +356,20 @@ export default function AdminProjects() {
 
             <div className="flex gap-2 mt-4 justify-end">
               {editId && (
-                <button type="button" onClick={resetForm} className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button type="button" onClick={resetForm} className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-1.5">
+                  <X size={13} /> Cancel
+                </button>
               )}
-              <button type="submit" disabled={isSubmitting || isUploading} className="px-5 py-2 rounded-md text-sm font-medium text-white bg-gray-700 hover:bg-gray-800 disabled:opacity-50">
+              <button type="submit" disabled={isSubmitting || isUploading} className="px-5 py-2 rounded-md text-sm font-medium text-white bg-gray-700 hover:bg-gray-800 disabled:opacity-50 flex items-center gap-1.5">
+                <Save size={13} />
                 {isUploading ? `Uploading ${uploadProgress}%` : isSubmitting ? "Saving..." : editId ? "Update Project" : "Add Project"}
               </button>
             </div>
           </form>
 
           {/* Projects List */}
-          <div className="py-3 border-b border-gray-200 mb-3">
+          <div className="py-3 border-b border-gray-200 mb-3 flex items-center gap-2">
+            <FolderKanban size={16} className="text-gray-400" />
             <h2 className="text-base font-semibold text-gray-800">All Projects</h2>
           </div>
 
@@ -385,14 +408,14 @@ export default function AdminProjects() {
                       <p className="text-xs text-gray-500 mt-2 line-clamp-2">{project.description}</p>
                     )}
                     <div className="mt-auto pt-2 flex justify-end gap-2">
-                      <button onClick={() => handlePin(project)} className={`p-1 rounded transition text-lg ${project.is_pinned ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-300 hover:text-yellow-400'}`} title={project.is_pinned ? "Unpin dari homepage" : "Pin ke homepage"}>
-                        <i className="ri-pushpin-fill"></i>
+                      <button onClick={() => handlePin(project)} className={`p-1.5 rounded-lg transition text-base ${project.is_pinned ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-50' : 'text-gray-300 hover:text-yellow-400 hover:bg-gray-50'}`} title={project.is_pinned ? "Unpin dari homepage" : "Pin ke homepage"}>
+                        <Pin size={14} className={project.is_pinned ? "fill-current" : ""} />
                       </button>
-                      <button onClick={() => handleEdit(project)} className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-800 transition" title="Edit">
-                        <i className="ri-edit-line text-base"></i>
+                      <button onClick={() => handleEdit(project)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition" title="Edit">
+                        <Pencil size={14} />
                       </button>
-                      <button onClick={() => handleDelete(project.id)} className="p-1 rounded hover:bg-red-50 text-red-400 hover:text-red-600 transition" title="Delete">
-                        <i className="ri-delete-bin-line text-base"></i>
+                      <button onClick={() => handleDelete(project.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition" title="Delete">
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </div>

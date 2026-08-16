@@ -2,6 +2,22 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../supabase";
 import { uploadAsset, pathFromPublicUrl, deleteAsset } from "../../lib/supabaseStorage";
 import Layout from "../../components/Layout";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  X,
+  Clock,
+  Upload,
+  Save,
+  FileText,
+  Bold,
+  Italic,
+  Heading2,
+  Link2,
+  Code,
+  AlertTriangle,
+} from "lucide-react";
 
 export default function ManageBlogs() {
   const [blogs, setBlogs] = useState([]);
@@ -183,168 +199,392 @@ export default function ManageBlogs() {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
+  const inputCls = "w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300 transition-all";
+
+  const formatBtns = [
+    { key: "bold", label: "Bold", icon: Bold },
+    { key: "italic", label: "Italic", icon: Italic },
+    { key: "heading", label: "Heading", icon: Heading2 },
+    { key: "link", label: "Link", icon: Link2 },
+    { key: "code", label: "Code", icon: Code },
+  ];
+
   return (
     <Layout>
-      <div className="bg-white min-h-screen text-gray-900">
-        <section className="max-w-full mx-auto">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-            <div>
-              <button onClick={handleCreateClick} className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
-                <i className="ri-add-line"></i> Create New
+      {/* Action bar */}
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2">
+          <FileText size={18} className="text-gray-400" />
+          <span className="text-sm font-semibold text-gray-700">
+            {loading ? "Memuat..." : `${blogs.length} blog post`}
+          </span>
+        </div>
+        <button
+          onClick={handleCreateClick}
+          className="flex items-center gap-1.5 bg-gray-900 hover:bg-gray-700 text-white text-sm font-medium px-3.5 py-2 rounded-lg transition-colors"
+        >
+          <Plus size={15} />
+          Create New
+        </button>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <div className="flex justify-center items-center h-48">
+          <div className="w-8 h-8 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+        </div>
+      ) : blogs.length === 0 ? (
+        <div className="text-center py-16 border-2 border-dashed border-gray-200 rounded-xl">
+          <FileText size={32} className="mx-auto text-gray-300 mb-3" />
+          <h3 className="text-base font-medium text-gray-700">Belum ada blog</h3>
+          <p className="text-sm text-gray-400 mt-1">Buat tulisan pertamamu sekarang</p>
+          <button
+            onClick={handleCreateClick}
+            className="mt-4 inline-flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            <Plus size={14} />
+            Create Blog
+          </button>
+        </div>
+      ) : (
+        <div className="overflow-x-auto -mx-4 md:mx-0">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-gray-100">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Blog Post
+                </th>
+                <th className="hidden sm:table-cell px-4 py-2.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="hidden md:table-cell px-4 py-2.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Published
+                </th>
+                <th className="hidden md:table-cell px-4 py-2.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Read
+                </th>
+                <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {blogs.map((blog) => (
+                <tr key={blog.id} className="hover:bg-gray-50 transition-colors group">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      {blog.thumbnail ? (
+                        <div className="flex-shrink-0 h-10 w-10 rounded-lg overflow-hidden bg-gray-100">
+                          <img
+                            className="h-full w-full object-cover"
+                            src={blog.thumbnail}
+                            alt={blog.title}
+                            onError={(e) => (e.target.style.display = "none")}
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                          <FileText size={14} className="text-gray-400" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="font-medium text-gray-900 truncate text-sm max-w-[180px] sm:max-w-xs">
+                          {blog.title}
+                        </div>
+                        <div className="text-xs text-gray-400 truncate">
+                          /{blog.slug}
+                        </div>
+                        <span
+                          className={`sm:hidden inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium mt-1 ${
+                            blog.status === "published"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {blog.status}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="hidden sm:table-cell px-4 py-3">
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        blog.status === "published"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
+                      {blog.status}
+                    </span>
+                  </td>
+                  <td className="hidden md:table-cell px-4 py-3 whitespace-nowrap text-xs text-gray-500">
+                    {formatDate(blog.published_at)}
+                  </td>
+                  <td className="hidden md:table-cell px-4 py-3 whitespace-nowrap">
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <Clock size={11} />
+                      {blog.reading_time} min
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-right">
+                    <div className="flex justify-end gap-1">
+                      <button
+                        onClick={() => handleEditClick(blog)}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                        title="Edit"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(blog)}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Delete Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <AlertTriangle size={18} className="text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">Hapus Blog</h3>
+                <p className="text-xs text-gray-400">Tindakan ini tidak bisa dibatalkan</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-5">
+              Yakin ingin menghapus{" "}
+              <strong className="text-gray-900">"{blogToDelete?.title}"</strong>?
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-1.5"
+              >
+                <Trash2 size={13} />
+                Hapus
               </button>
             </div>
           </div>
+        </div>
+      )}
 
-          {loading ? (
-            <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-500"></div></div>
-          ) : blogs.length === 0 ? (
-            <div className="text-center py-16 border-2 border-dashed border-gray-200 rounded-lg">
-              <h3 className="text-lg font-medium text-gray-700">No blogs yet</h3>
-              <p className="text-gray-500 mt-1">Get started by creating your first blog post</p>
-              <button onClick={handleCreateClick} className="mt-4 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2 transition-colors">
-                <i className="ri-add-line"></i> Create Blog
+      {/* Blog Create/Edit Modal */}
+      {showBlogModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                {modalMode === "create" ? (
+                  <Plus size={17} className="text-gray-500" />
+                ) : (
+                  <Pencil size={17} className="text-gray-500" />
+                )}
+                <h3 className="text-base font-semibold text-gray-900">
+                  {modalMode === "create" ? "Create New Blog" : "Edit Blog"}
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowBlogModal(false)}
+                className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                <X size={16} />
               </button>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Blog Post</th>
-                    <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Published</th>
-                    <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Read Time</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {blogs.map((blog) => (
-                    <tr key={blog.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          {blog.thumbnail && (
-                            <div className="flex-shrink-0 h-10 w-10 rounded-md overflow-hidden">
-                              <img className="h-full w-full object-cover" src={blog.thumbnail} alt={blog.title} onError={(e) => e.target.style.display = 'none'} />
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <div className="font-medium text-gray-900 truncate text-sm">{blog.title}</div>
-                            <div className="text-xs text-gray-400 truncate">/{blog.slug}</div>
-                            <span className={`sm:hidden inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium mt-1 ${blog.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{blog.status}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="hidden sm:table-cell px-4 py-3">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${blog.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{blog.status}</span>
-                      </td>
-                      <td className="hidden md:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-500">{formatDate(blog.published_at)}</td>
-                      <td className="hidden md:table-cell px-4 py-3 whitespace-nowrap">
-                        <div className="flex items-center gap-1"><i className="ri-time-line text-gray-400 text-xs"></i><span className="text-sm text-gray-500">{blog.reading_time} min</span></div>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end gap-2">
-                          <button onClick={() => handleEditClick(blog)} className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-100 transition-colors" title="Edit"><i className="ri-pencil-line text-base"></i></button>
-                          <button onClick={() => handleDeleteClick(blog)} className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors" title="Delete"><i className="ri-delete-bin-line text-base"></i></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
 
-        {/* Delete Modal */}
-        {showDeleteModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Confirm Deletion</h3>
-              <p className="text-gray-600 mb-6">Are you sure you want to delete "<strong>{blogToDelete?.title}</strong>"? This action cannot be undone.</p>
-              <div className="flex justify-end gap-3">
-                <button onClick={() => setShowDeleteModal(false)} className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
-                <button onClick={confirmDelete} className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Delete</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Blog Create/Edit Modal */}
-        {showBlogModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-lg font-medium text-gray-900">{modalMode === 'create' ? 'Create New Blog' : 'Edit Blog'}</h3>
-                <button onClick={() => setShowBlogModal(false)} className="text-gray-400 hover:text-gray-500"><i className="ri-close-line text-xl"></i></button>
-              </div>
-              <form onSubmit={handleSubmit}>
+            {/* Modal Body */}
+            <div className="overflow-y-auto flex-1 px-6 py-5">
+              <form id="blog-form" onSubmit={handleSubmit}>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Title*</label>
-                    <input type="text" name="title" value={currentBlog.title} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800" />
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+                      Title *
+                    </label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={currentBlog.title}
+                      onChange={handleInputChange}
+                      className={inputCls}
+                      placeholder="Judul blog post"
+                    />
                   </div>
+
+                  {/* Slug */}
+                  {currentBlog.slug && (
+                    <p className="text-xs text-gray-400">
+                      Slug:{" "}
+                      <code className="bg-gray-100 px-1 rounded">
+                        /{currentBlog.slug}
+                      </code>
+                    </p>
+                  )}
+
+                  {/* Thumbnail */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail</label>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+                      Thumbnail
+                    </label>
                     <div className="flex flex-col sm:flex-row gap-2">
-                      <input type="url" name="thumbnail" value={currentBlog.thumbnail} onChange={handleInputChange} className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800" placeholder="https://example.com/image.jpg (atau upload di kanan)" />
-                      <button type="button" onClick={() => thumbInputRef.current?.click()} disabled={isUploading} className="px-3 py-2 bg-gray-600 text-white rounded-md text-sm font-medium hover:bg-gray-700 disabled:opacity-50 whitespace-nowrap">
-                        {isUploading ? `Uploading ${uploadProgress}%` : 'Upload File'}
+                      <input
+                        type="url"
+                        name="thumbnail"
+                        value={currentBlog.thumbnail}
+                        onChange={handleInputChange}
+                        className={`${inputCls} flex-1`}
+                        placeholder="https://example.com/image.jpg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => thumbInputRef.current?.click()}
+                        disabled={isUploading}
+                        className="flex items-center gap-1.5 px-3 py-2 bg-gray-700 text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 whitespace-nowrap flex-shrink-0 transition-colors"
+                      >
+                        <Upload size={13} />
+                        {isUploading ? `${uploadProgress}%` : "Upload"}
                       </button>
-                      <input ref={thumbInputRef} type="file" accept="image/*" onChange={handleThumbnailUpload} className="hidden" />
+                      <input
+                        ref={thumbInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleThumbnailUpload}
+                        className="hidden"
+                      />
                     </div>
                     {isUploading && (
-                      <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-                        <div className="bg-gray-600 h-1.5 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                      <div className="mt-2 w-full bg-gray-100 rounded-full h-1">
+                        <div
+                          className="bg-gray-700 h-1 rounded-full transition-all duration-300"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
                       </div>
                     )}
                     {currentBlog.thumbnail && (
                       <div className="mt-2">
-                        <img src={currentBlog.thumbnail} alt="Thumbnail preview" className="h-32 object-contain rounded border border-gray-200" onError={(e) => e.target.style.display = 'none'} />
+                        <img
+                          src={currentBlog.thumbnail}
+                          alt="Thumbnail preview"
+                          className="h-24 object-contain rounded-lg border border-gray-200"
+                          onError={(e) => (e.target.style.display = "none")}
+                        />
                       </div>
                     )}
-                    <p className="mt-1 text-xs text-gray-400">Bisa upload file (disimpan ke Supabase) atau tempel URL gambar.</p>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                  {/* Meta fields */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Reading Time (minutes)*</label>
-                      <input type="text" name="reading_time" value={currentBlog.reading_time} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800" />
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+                        Reading Time (min)
+                      </label>
+                      <input
+                        type="number"
+                        name="reading_time"
+                        value={currentBlog.reading_time}
+                        onChange={handleInputChange}
+                        className={inputCls}
+                        min="1"
+                      />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Status*</label>
-                      <select name="status" value={currentBlog.status} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800">
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+                        Status
+                      </label>
+                      <select
+                        name="status"
+                        value={currentBlog.status}
+                        onChange={handleInputChange}
+                        className={inputCls}
+                      >
                         <option value="published">Published</option>
                         <option value="draft">Draft</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Publish Date & Time*</label>
-                      <input type="datetime-local" value={formatDateForInput(currentBlog.published_at)} onChange={handleDateChange} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800" />
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+                        Publish Date
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={formatDateForInput(currentBlog.published_at)}
+                        onChange={handleDateChange}
+                        className={inputCls}
+                      />
                     </div>
                   </div>
+
+                  {/* Content */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Content*</label>
-                    <div className="mb-2 flex gap-2 flex-wrap">
-                      {['bold', 'italic', 'heading', 'link', 'code'].map(fmt => (
-                        <button key={fmt} type="button" onClick={() => applyFormat(fmt)} className="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200" title={fmt}>
-                          <i className={`ri-${fmt === 'bold' ? 'bold' : fmt === 'italic' ? 'italic' : fmt === 'heading' ? 'heading' : fmt === 'link' ? 'link' : 'code-line'}`}></i>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+                      Content *
+                    </label>
+                    {/* Format toolbar */}
+                    <div className="flex gap-1 mb-2 flex-wrap p-1.5 bg-gray-50 rounded-lg border border-gray-200">
+                      {formatBtns.map(({ key, label, icon: Icon }) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => applyFormat(key)}
+                          title={label}
+                          className="p-1.5 rounded-md text-gray-500 hover:text-gray-800 hover:bg-white hover:shadow-sm transition-all"
+                        >
+                          <Icon size={14} />
                         </button>
                       ))}
                     </div>
-                    <textarea name="content" value={currentBlog.content} onChange={handleContentChange} rows="12" className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800 font-mono" />
+                    <textarea
+                      name="content"
+                      value={currentBlog.content}
+                      onChange={handleContentChange}
+                      rows={12}
+                      className={`${inputCls} font-mono text-xs resize-none`}
+                      placeholder="Tulis konten blog dalam Markdown..."
+                    />
                   </div>
-                </div>
-                <div className="mt-6 flex justify-end gap-3">
-                  <button type="button" onClick={() => setShowBlogModal(false)} className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
-                  <button type="submit" className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 flex items-center gap-2">
-                    <i className={modalMode === 'create' ? 'ri-save-line' : 'ri-edit-line'}></i>
-                    {modalMode === 'create' ? 'Create Blog' : 'Update Blog'}
-                  </button>
                 </div>
               </form>
             </div>
+
+            {/* Modal Footer */}
+            <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowBlogModal(false)}
+                className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-white transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                form="blog-form"
+                className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors flex items-center gap-1.5"
+              >
+                <Save size={14} />
+                {modalMode === "create" ? "Buat Blog" : "Update Blog"}
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </Layout>
   );
 }

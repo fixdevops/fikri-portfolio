@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabase';
 import Layout from '../../components/Layout';
+import {
+  Plus,
+  X,
+  Search,
+  Pencil,
+  Trash2,
+  Tv2,
+  Star,
+  ImageOff,
+  Save,
+} from 'lucide-react';
 
 export default function ManageAnime() {
   const [animes, setAnimes] = useState([]);
@@ -140,20 +151,21 @@ export default function ManageAnime() {
     <Layout>
       <div className="bg-gray-50 min-h-screen text-gray-800">
         <div className="container mx-auto max-w-full">
-          <div className="flex justify-between items-center mb-6">
-            <div className="relative flex-1 max-w-md">
-              <input type="text" placeholder="Search anime..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg bg-white text-gray-800" />
-              <i className="ri-search-line absolute left-3 top-3 text-gray-400"></i>
+          <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center mb-6">
+            <div className="relative w-full sm:max-w-xs">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input type="text" placeholder="Search anime..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200" />
             </div>
-            <button onClick={() => { resetForm(); setShowForm(!showForm); }} className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center gap-2">
-              <i className={showForm ? "ri-close-line" : "ri-add-line"}></i>
-              {showForm ? 'Close Form' : 'Add Anime'}
+            <button onClick={() => { resetForm(); setShowForm(!showForm); }} className="flex items-center gap-1.5 px-3.5 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors flex-shrink-0 w-full sm:w-auto justify-center">
+              {showForm ? <><X size={14} /> Tutup Form</> : <><Plus size={14} /> Add Anime</>}
             </button>
           </div>
 
           {showForm && (
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <h2 className="text-xl font-semibold mb-4">{editMode ? 'Edit Anime' : 'Add New Anime'}</h2>
+              <h2 className="text-base font-semibold mb-4 flex items-center gap-2">
+                {editMode ? <><Pencil size={15} className="text-gray-500" /> Edit Anime</> : <><Plus size={15} className="text-gray-500" /> Add New Anime</>}
+              </h2>
               <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
@@ -215,9 +227,14 @@ export default function ManageAnime() {
                 </div>
 
                 <div className="flex gap-3 mt-4">
-                  <button type="submit" className="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800">{editMode ? 'Update' : 'Save'}</button>
+                  <button type="submit" className="px-5 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-700 flex items-center gap-1.5 transition-colors">
+                    <Save size={13} />
+                    {editMode ? 'Update' : 'Save'}
+                  </button>
                   {editMode && (
-                    <button type="button" onClick={resetForm} className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Cancel</button>
+                    <button type="button" onClick={resetForm} className="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 flex items-center gap-1.5 transition-colors">
+                      <X size={13} /> Cancel
+                    </button>
                   )}
                 </div>
               </form>
@@ -235,8 +252,9 @@ export default function ManageAnime() {
               ))}
             </div>
           ) : filteredAnimes.length === 0 ? (
-            <div className="text-center py-8 bg-white rounded-lg shadow-sm">
-              <p className="text-gray-500">{searchTerm ? 'No animes found matching your search.' : 'No animes found. Add your first anime!'}</p>
+            <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-xl">
+              <Tv2 size={32} className="mx-auto text-gray-300 mb-3" />
+              <p className="text-gray-500 text-sm">{searchTerm ? 'Anime tidak ditemukan.' : 'Belum ada anime. Tambahkan yang pertama!'}</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -246,11 +264,11 @@ export default function ManageAnime() {
                     {anime.cover_image ? (
                       <img src={anime.cover_image} alt={anime.title} className="w-full h-full object-cover group-hover:scale-105 transition" />
                     ) : (
-                      <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400"><i className="ri-image-line text-3xl"></i></div>
+                      <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400"><ImageOff size={24} /></div>
                     )}
                     <div className="absolute top-2 right-2 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition">
-                      <button onClick={() => handleEdit(anime)} className="p-1.5 bg-white rounded-full shadow hover:bg-gray-50" title="Edit"><i className="ri-edit-line text-sm text-gray-700"></i></button>
-                      <button onClick={() => handleDelete(anime.id)} className="p-1.5 bg-white rounded-full shadow hover:bg-red-50" title="Delete"><i className="ri-delete-bin-line text-sm text-red-500"></i></button>
+                      <button onClick={() => handleEdit(anime)} className="p-1.5 bg-white rounded-lg shadow hover:bg-gray-50 transition-colors" title="Edit"><Pencil size={12} className="text-gray-700" /></button>
+                      <button onClick={() => handleDelete(anime.id)} className="p-1.5 bg-white rounded-lg shadow hover:bg-red-50 transition-colors" title="Delete"><Trash2 size={12} className="text-red-500" /></button>
                     </div>
                     {anime.status && (
                       <span className={`absolute bottom-2 left-2 text-xs px-2 py-0.5 rounded-full font-medium ${anime.status === 'Completed' ? 'bg-green-100 text-green-700' : anime.status === 'Ongoing' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>{anime.status}</span>
@@ -266,7 +284,7 @@ export default function ManageAnime() {
                       </div>
                     )}
                     {anime.rating > 0 && (
-                      <div className="flex items-center gap-1 mt-1"><i className="ri-star-fill text-yellow-400 text-xs"></i><span className="text-xs text-gray-500">{anime.rating}</span></div>
+                      <div className="flex items-center gap-1 mt-1"><Star size={10} className="text-yellow-400 fill-yellow-400" /><span className="text-xs text-gray-500">{anime.rating}</span></div>
                     )}
                   </div>
                 </div>

@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabase';
 import Layout from '../../components/Layout';
+import {
+  Pencil,
+  Trash2,
+  ExternalLink,
+  Music2,
+  Save,
+  X,
+} from 'lucide-react';
 
 export default function ManageAudio() {
   const [audios, setAudios] = useState([]);
@@ -178,30 +186,36 @@ export default function ManageAudio() {
           </div>
 
           {filteredAudios.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
-                    <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                    <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+            <div className="overflow-x-auto -mx-4 md:mx-0">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Title</th>
+                    <th className="hidden sm:table-cell px-4 py-2.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Category</th>
+                    <th className="hidden md:table-cell px-4 py-2.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Date</th>
+                    <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-50">
                   {filteredAudios.map(audio => (
-                    <tr key={audio.id} className="hover:bg-gray-50">
+                    <tr key={audio.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="text-sm font-medium text-gray-900 truncate max-w-[180px] sm:max-w-xs">{audio.title}</div>
                         <span className="sm:hidden text-xs text-gray-500">{formatCategory(audio.category)}</span>
                       </td>
-                      <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap"><span className="px-2 py-1 inline-flex text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{formatCategory(audio.category)}</span></td>
-                      <td className="hidden md:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-500">{formatDate(audio.created_at)}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end gap-3">
-                          <a href={audio.audio_url} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-gray-900" title="Preview"><i className="ri-external-link-line text-base"></i></a>
-                          <button onClick={() => handleEdit(audio)} className="text-gray-500 hover:text-gray-900" title="Edit"><i className="ri-pencil-line text-base"></i></button>
-                          <button onClick={() => handleDelete(audio.id)} className="text-red-500 hover:text-red-700" title="Delete"><i className="ri-delete-bin-line text-base"></i></button>
+                      <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap"><span className="px-2 py-1 inline-flex text-xs font-semibold rounded-full bg-gray-100 text-gray-700">{formatCategory(audio.category)}</span></td>
+                      <td className="hidden md:table-cell px-4 py-3 whitespace-nowrap text-xs text-gray-500">{formatDate(audio.created_at)}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-right">
+                        <div className="flex justify-end gap-1">
+                          <a href={audio.audio_url} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors" title="Preview">
+                            <ExternalLink size={13} />
+                          </a>
+                          <button onClick={() => handleEdit(audio)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors" title="Edit">
+                            <Pencil size={13} />
+                          </button>
+                          <button onClick={() => handleDelete(audio.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Delete">
+                            <Trash2 size={13} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -211,9 +225,9 @@ export default function ManageAudio() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <i className="ri-music-2-line text-4xl text-gray-400"></i>
-              <h3 className="text-lg font-medium text-gray-900 mb-1">{activeFilter === 'all' ? 'No audios found' : `No audios in ${formatCategory(activeFilter)} category`}</h3>
-              <p className="text-gray-500">Add your first audio using the form above</p>
+              <Music2 size={32} className="mx-auto text-gray-300 mb-3" />
+              <h3 className="text-base font-medium text-gray-700 mb-1">{activeFilter === 'all' ? 'No audios found' : `No audios in ${formatCategory(activeFilter)} category`}</h3>
+              <p className="text-sm text-gray-400">Tambahkan audio menggunakan form di atas</p>
             </div>
           )}
         </div>
