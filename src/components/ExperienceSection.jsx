@@ -11,26 +11,39 @@ const TAG_CLS = {
   cyan:   "bg-cyan-100 text-cyan-700",
 };
 
-function ExpIcon({ type, value, bg, color }) {
+function ExpIcon({ type, value, bg, color, size = 40, fit = "contain" }) {
   const style = { backgroundColor: bg, color };
   if (type === "image") {
     return (
-      <div className="h-10 w-10 rounded-full border border-gray-200 overflow-hidden flex-shrink-0 bg-white">
-        <img src={value} alt="" className="h-full w-full object-contain p-1"
-          onError={(e) => (e.target.style.display = "none")} />
+      <div
+        className="rounded-full border border-gray-200 overflow-hidden flex-shrink-0"
+        style={{ width: size, height: size, minWidth: size, background: bg || "white" }}
+      >
+        <img
+          src={value}
+          alt=""
+          style={{ width: "100%", height: "100%", objectFit: fit }}
+          onError={(e) => (e.target.style.display = "none")}
+        />
       </div>
     );
   }
   if (type === "emoji") {
     return (
-      <div className="h-10 w-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={style}>
+      <div
+        className="rounded-full flex items-center justify-center text-xl flex-shrink-0"
+        style={{ ...style, width: size, height: size, minWidth: size }}
+      >
         {value}
       </div>
     );
   }
   // remix icon
   return (
-    <div className="h-10 w-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={style}>
+    <div
+      className="rounded-full flex items-center justify-center text-xl flex-shrink-0"
+      style={{ ...style, width: size, height: size, minWidth: size }}
+    >
       <i className={value}></i>
     </div>
   );
@@ -102,6 +115,8 @@ export default function ExperienceSection() {
                 value={item.icon_value}
                 bg={item.icon_bg}
                 color={item.icon_color}
+                size={item.logo_size || 40}
+                fit={item.logo_fit || "contain"}
               />
               <div>
                 <h3 className="text-base font-semibold text-gray-800">{item.title}</h3>
