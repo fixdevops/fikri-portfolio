@@ -296,10 +296,10 @@ export default function ManageEducation() {
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Logo Institusi</label>
 
-                  {/* dropzone */}
-                  <div
-                    onClick={() => fileInputRef.current.click()}
-                    className="w-full border-2 border-dashed border-gray-200 rounded-xl flex items-center gap-3 px-4 py-3 cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                  {/* label langsung membungkus input — bekerja di semua browser termasuk iOS Safari */}
+                  <label
+                    htmlFor="edu-logo-input"
+                    className="w-full border-2 border-dashed border-gray-200 rounded-xl flex items-center gap-3 px-4 py-3 cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors active:bg-gray-100"
                   >
                     {previewUrl ? (
                       <div
@@ -316,13 +316,20 @@ export default function ManageEducation() {
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-500">
-                        {selectedFile ? selectedFile.name : previewUrl ? "Klik untuk ganti logo" : "Klik untuk upload logo"}
+                        {selectedFile ? selectedFile.name : previewUrl ? "Tap untuk ganti logo" : "Tap untuk upload logo"}
                       </p>
                       <p className="text-xs text-gray-400 mt-0.5">JPG, PNG, WebP · Maks 5MB</p>
                     </div>
                     <Upload size={16} className="text-gray-300 flex-shrink-0" />
-                  </div>
-                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                  </label>
+                  <input
+                    id="edu-logo-input"
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="sr-only"
+                  />
 
                   {/* progress */}
                   {uploading && (
@@ -350,14 +357,28 @@ export default function ManageEducation() {
 
                     {/* ukuran */}
                     <div>
-                      <div className="flex justify-between mb-1">
-                        <label className="text-xs text-gray-500">Ukuran</label>
-                        <span className="text-xs font-mono text-gray-600">{logoSize}px</span>
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="text-xs text-gray-500">Ukuran Logo</label>
+                        <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-0.5 rounded">{logoSize}px</span>
                       </div>
-                      <input type="range" min="32" max="120" step="4"
-                        value={logoSize}
-                        onChange={(e) => setForm({ ...form, logo_size: parseInt(e.target.value) })}
-                        className="w-full" />
+                      {/* tombol +/- untuk mobile, slider untuk desktop */}
+                      <div className="flex items-center gap-3">
+                        <button type="button"
+                          onPointerDown={(e) => { e.preventDefault(); setForm((p) => ({ ...p, logo_size: Math.max(32, (p.logo_size||56) - 4) })); }}
+                          className="w-9 h-9 flex-shrink-0 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 text-lg font-bold hover:bg-gray-50 active:bg-gray-100 select-none">
+                          −
+                        </button>
+                        <input type="range" min="32" max="120" step="4"
+                          value={logoSize}
+                          onChange={(e) => setForm({ ...form, logo_size: parseInt(e.target.value) })}
+                          className="flex-1 h-2 accent-gray-700"
+                          style={{ touchAction: "none" }} />
+                        <button type="button"
+                          onPointerDown={(e) => { e.preventDefault(); setForm((p) => ({ ...p, logo_size: Math.min(120, (p.logo_size||56) + 4) })); }}
+                          className="w-9 h-9 flex-shrink-0 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 text-lg font-bold hover:bg-gray-50 active:bg-gray-100 select-none">
+                          +
+                        </button>
+                      </div>
                     </div>
 
                     {/* object-fit */}

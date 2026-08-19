@@ -381,10 +381,10 @@ export default function ManageExperience() {
                       </label>
                       {form.icon_type === "image" ? (
                         <div className="space-y-2">
-                          {/* upload dropzone */}
-                          <div
-                            onClick={() => fileInputRef.current.click()}
-                            className="w-full border-2 border-dashed border-gray-200 rounded-xl flex items-center gap-2 px-3 py-2 cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                          {/* label langsung bungkus input — fix iOS Safari */}
+                          <label
+                            htmlFor="exp-icon-input"
+                            className="w-full border-2 border-dashed border-gray-200 rounded-xl flex items-center gap-2 px-3 py-2 cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors active:bg-gray-100"
                           >
                             {previewUrl ? (
                               <div className="w-9 h-9 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0"
@@ -397,11 +397,16 @@ export default function ManageExperience() {
                               </div>
                             )}
                             <span className="text-xs text-gray-400 flex-1 truncate">
-                              {selectedFile ? selectedFile.name : "Klik upload gambar"}
+                              {selectedFile ? selectedFile.name : "Tap untuk upload gambar"}
                             </span>
                             <Upload size={13} className="text-gray-300 flex-shrink-0" />
-                          </div>
-                          <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
+                          </label>
+                          <input
+                            id="exp-icon-input"
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="sr-only"
                             onChange={(e) => {
                               const file = e.target.files[0];
                               if (!file) return;
