@@ -12,14 +12,17 @@ const EMPTY = {
   title: "",
   subtitle: "",
   description: "",
-  icon_type: "remix",   // "remix" | "emoji" | "image"
+  icon_type: "remix",
   icon_value: "ri-briefcase-4-line",
   icon_bg: "#f3f4f6",
   icon_color: "#374151",
-  tags: "",             // comma-separated string in form
+  tags: "",
   tag_color: "gray",
   is_wide: false,
   sort_order: 0,
+  logo_size: 40,
+  logo_fit: "contain",
+  logo_bg: "#f3f4f6",
 };
 
 const TAG_COLORS = [
@@ -46,25 +49,30 @@ const inputCls =
   "w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all";
 
 /* icon preview helper */
-function IconPreview({ type, value, bg, color }) {
+function IconPreview({ type, value, bg, color, size = 40, fit = "contain" }) {
   const style = { backgroundColor: bg, color };
   if (type === "image") {
     return (
-      <div className="h-10 w-10 rounded-full border border-gray-200 overflow-hidden flex-shrink-0" style={{ background: bg }}>
-        <img src={value} alt="" className="h-full w-full object-contain p-1" onError={(e) => (e.target.style.display = "none")} />
+      <div
+        className="rounded-full border border-gray-200 overflow-hidden flex-shrink-0"
+        style={{ width: size, height: size, minWidth: size, background: bg }}
+      >
+        <img src={value} alt="" style={{ width: "100%", height: "100%", objectFit: fit }}
+          onError={(e) => (e.target.style.display = "none")} />
       </div>
     );
   }
   if (type === "emoji") {
     return (
-      <div className="h-10 w-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={style}>
+      <div className="rounded-full flex items-center justify-center text-xl flex-shrink-0"
+        style={{ ...style, width: size, height: size, minWidth: size }}>
         {value}
       </div>
     );
   }
-  // remix
   return (
-    <div className="h-10 w-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={style}>
+    <div className="rounded-full flex items-center justify-center text-xl flex-shrink-0"
+      style={{ ...style, width: size, height: size, minWidth: size }}>
       <i className={value}></i>
     </div>
   );
@@ -122,6 +130,9 @@ export default function ManageExperience() {
       tag_color:   item.tag_color || "gray",
       is_wide:     item.is_wide || false,
       sort_order:  item.sort_order,
+      logo_size:   item.logo_size || 40,
+      logo_fit:    item.logo_fit  || "contain",
+      logo_bg:     item.logo_bg   || item.icon_bg || "#f3f4f6",
     });
     setPreviewUrl(item.icon_type === "image" ? item.icon_value : "");
     setSelectedFile(null);
@@ -428,6 +439,90 @@ export default function ManageExperience() {
                             onChange={(e) => { f("icon_value", e.target.value); setPreviewUrl(e.target.value); setSelectedFile(null); }}
                             placeholder="Atau paste URL gambar…"
                             className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs bg-gray-50 focus:bg-white focus:outline-none" />
+
+                          {/* ── Pengaturan Tampilan Logo ── */}
+                          {previewUrl && (
+                            <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 space-y-3 mt-1">
+                              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Pengaturan Logo</p>
+
+                              {/* ukuran */}
+                              <div>
+                                <div className="flex justify-between items-center mb-1.5">
+                                  <label className="text-xs text-gray-500">Ukuran</label>
+                                  <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-0.5 rounded">{form.logo_size || 40}px</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button type="button"
+                                    onPointerDown={(e) => { e.preventDefault(); f("logo_size", Math.max(24, (form.logo_size||40) - 4)); }}
+                                    className="w-9 h-9 flex-shrink-0 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 text-lg font-bold active:bg-gray-100 select-none">
+                                    −
+                                  </button>
+                                  <input type="range" min="24" max="100" step="4"
+                                    value={form.logo_size || 40}
+                                    onChange={(e) => f("logo_size", parseInt(e.target.value))}
+                                    className="flex-1 h-2 accent-gray-700" style={{ touchAction: "none" }} />
+                                  <button type="button"
+                                    onPointerDown={(e) => { e.preventDefault(); f("logo_size", Math.min(100, (form.logo_size||40) + 4)); }}
+                                    className="w-9 h-9 flex-shrink-0 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 text-lg font-bold active:bg-gray-100 select-none">
+                                    +
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* object-fit */}
+                              <div>
+                                <label className="text-xs text-gray-500 mb-1.5 block">Object Fit</label>
+                                <div className="flex gap-2">
+                                  {["contain","cover","fill"].map((fit) => (
+                                    <button key={fit} type="button"
+                                      onClick={() => f("logo_fit", fit)}
+                                      className={`px-3 py-1 text-xs rounded-lg border transition-all ${
+                                        (form.logo_fit||"contain") === fit
+                                          ? "bg-gray-900 text-white border-gray-900"
+                                          : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                                      }`}>
+                                      {fit}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* background logo */}
+                              <div>
+                                <label className="text-xs text-gray-500 mb-1.5 block">Background Logo</label>
+                                <div className="flex gap-2 flex-wrap items-center">
+                                  {["#f3f4f6","white","transparent","#1f2937","#dbeafe","#fce7f3"].map((bg) => (
+                                    <button key={bg} type="button"
+                                      onClick={() => f("logo_bg", bg)}
+                                      style={{ background: bg === "transparent" ? "repeating-conic-gradient(#ccc 0% 25%, white 0% 50%) 0 0 / 10px 10px" : bg }}
+                                      className={`w-8 h-8 rounded-lg border-2 transition-all ${
+                                        (form.logo_bg||"#f3f4f6") === bg ? "border-gray-700 scale-110 shadow" : "border-gray-200 hover:border-gray-400"
+                                      }`} title={bg} />
+                                  ))}
+                                  <input type="color"
+                                    value={(form.logo_bg||"#f3f4f6").startsWith("#") ? form.logo_bg : "#f3f4f6"}
+                                    onChange={(e) => f("logo_bg", e.target.value)}
+                                    className="w-8 h-8 rounded-lg border-2 border-gray-200 cursor-pointer p-0.5" title="Warna kustom" />
+                                </div>
+                              </div>
+
+                              {/* live preview */}
+                              <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+                                <div
+                                  className="rounded-full border border-gray-200 overflow-hidden flex-shrink-0"
+                                  style={{
+                                    width: form.logo_size || 40,
+                                    height: form.logo_size || 40,
+                                    background: form.logo_bg || "#f3f4f6"
+                                  }}
+                                >
+                                  <img src={previewUrl} alt="preview"
+                                    style={{ width: "100%", height: "100%", objectFit: form.logo_fit || "contain" }} />
+                                </div>
+                                <p className="text-xs text-gray-400">Preview live</p>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <input type="text"
@@ -470,8 +565,10 @@ export default function ManageExperience() {
                     <IconPreview
                       type={form.icon_type}
                       value={form.icon_value}
-                      bg={form.icon_bg}
+                      bg={form.icon_type === "image" ? (form.logo_bg || form.icon_bg) : form.icon_bg}
                       color={form.icon_color}
+                      size={form.icon_type === "image" ? (form.logo_size || 40) : 40}
+                      fit={form.logo_fit || "contain"}
                     />
                     <div>
                       <p className="text-xs font-semibold text-gray-700">{form.title || "Preview Title"}</p>
