@@ -443,83 +443,54 @@ export default function ManageExperience() {
                           {/* ── Pengaturan Tampilan Logo ── */}
                           {previewUrl && (
                             <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 space-y-3 mt-1">
-                              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Pengaturan Logo</p>
-
-                              {/* ukuran */}
-                              <div>
-                                <div className="flex justify-between items-center mb-1.5">
-                                  <label className="text-xs text-gray-500">Ukuran</label>
-                                  <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-0.5 rounded">{form.logo_size || 40}px</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <button type="button"
-                                    onPointerDown={(e) => { e.preventDefault(); f("logo_size", Math.max(24, (form.logo_size||40) - 4)); }}
-                                    className="w-9 h-9 flex-shrink-0 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 text-lg font-bold active:bg-gray-100 select-none">
-                                    −
-                                  </button>
-                                  <input type="range" min="24" max="100" step="4"
-                                    value={form.logo_size || 40}
-                                    onChange={(e) => f("logo_size", parseInt(e.target.value))}
-                                    className="flex-1 h-2 accent-gray-700" style={{ touchAction: "none" }} />
-                                  <button type="button"
-                                    onPointerDown={(e) => { e.preventDefault(); f("logo_size", Math.min(100, (form.logo_size||40) + 4)); }}
-                                    className="w-9 h-9 flex-shrink-0 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 text-lg font-bold active:bg-gray-100 select-none">
-                                    +
-                                  </button>
-                                </div>
-                              </div>
+                              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Sesuaikan Gambar</p>
 
                               {/* object-fit */}
                               <div>
-                                <label className="text-xs text-gray-500 mb-1.5 block">Object Fit</label>
-                                <div className="flex gap-2">
-                                  {["contain","cover","fill"].map((fit) => (
-                                    <button key={fit} type="button"
-                                      onClick={() => f("logo_fit", fit)}
-                                      className={`px-3 py-1 text-xs rounded-lg border transition-all ${
-                                        (form.logo_fit||"contain") === fit
-                                          ? "bg-gray-900 text-white border-gray-900"
-                                          : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                                <label className="text-xs text-gray-500 mb-1.5 block">Cara gambar mengisi lingkaran</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                  {[
+                                    { val: "contain", label: "Contain", desc: "Gambar penuh, tidak terpotong" },
+                                    { val: "cover",   label: "Cover",   desc: "Mengisi penuh, bisa terpotong" },
+                                    { val: "fill",    label: "Fill",    desc: "Peregangan mengisi" },
+                                  ].map(({ val, label, desc }) => (
+                                    <button key={val} type="button"
+                                      onClick={() => f("logo_fit", val)}
+                                      className={`flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all ${
+                                        (form.logo_fit || "contain") === val
+                                          ? "border-gray-900 bg-white shadow"
+                                          : "border-gray-200 bg-white hover:border-gray-400"
                                       }`}>
-                                      {fit}
+                                      {/* mini preview */}
+                                      <div className="w-10 h-10 rounded-full border border-gray-200 overflow-hidden"
+                                        style={{ background: form.logo_bg || "#f3f4f6" }}>
+                                        <img src={previewUrl} alt=""
+                                          style={{ width: "100%", height: "100%", objectFit: val }} />
+                                      </div>
+                                      <span className="text-[10px] font-semibold text-gray-700">{label}</span>
+                                      <span className="text-[9px] text-gray-400 text-center leading-tight">{desc}</span>
                                     </button>
                                   ))}
                                 </div>
                               </div>
 
-                              {/* background logo */}
+                              {/* background lingkaran */}
                               <div>
-                                <label className="text-xs text-gray-500 mb-1.5 block">Background Logo</label>
+                                <label className="text-xs text-gray-500 mb-1.5 block">Warna background lingkaran</label>
                                 <div className="flex gap-2 flex-wrap items-center">
-                                  {["#f3f4f6","white","transparent","#1f2937","#dbeafe","#fce7f3"].map((bg) => (
+                                  {["#f3f4f6","white","transparent","#1f2937","#dbeafe","#fce7f3","#dcfce7","#fef9c3"].map((bg) => (
                                     <button key={bg} type="button"
                                       onClick={() => f("logo_bg", bg)}
                                       style={{ background: bg === "transparent" ? "repeating-conic-gradient(#ccc 0% 25%, white 0% 50%) 0 0 / 10px 10px" : bg }}
-                                      className={`w-8 h-8 rounded-lg border-2 transition-all ${
-                                        (form.logo_bg||"#f3f4f6") === bg ? "border-gray-700 scale-110 shadow" : "border-gray-200 hover:border-gray-400"
+                                      className={`w-8 h-8 rounded-full border-2 transition-all ${
+                                        (form.logo_bg || "#f3f4f6") === bg ? "border-gray-800 scale-110 shadow" : "border-gray-200 hover:border-gray-400"
                                       }`} title={bg} />
                                   ))}
                                   <input type="color"
                                     value={(form.logo_bg||"#f3f4f6").startsWith("#") ? form.logo_bg : "#f3f4f6"}
                                     onChange={(e) => f("logo_bg", e.target.value)}
-                                    className="w-8 h-8 rounded-lg border-2 border-gray-200 cursor-pointer p-0.5" title="Warna kustom" />
+                                    className="w-8 h-8 rounded-full border-2 border-gray-200 cursor-pointer p-0.5" title="Warna kustom" />
                                 </div>
-                              </div>
-
-                              {/* live preview */}
-                              <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
-                                <div
-                                  className="rounded-full border border-gray-200 overflow-hidden flex-shrink-0"
-                                  style={{
-                                    width: form.logo_size || 40,
-                                    height: form.logo_size || 40,
-                                    background: form.logo_bg || "#f3f4f6"
-                                  }}
-                                >
-                                  <img src={previewUrl} alt="preview"
-                                    style={{ width: "100%", height: "100%", objectFit: form.logo_fit || "contain" }} />
-                                </div>
-                                <p className="text-xs text-gray-400">Preview live</p>
                               </div>
                             </div>
                           )}
