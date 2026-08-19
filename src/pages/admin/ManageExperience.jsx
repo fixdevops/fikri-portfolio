@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../supabase";
+import { uploadAsset, pathFromPublicUrl, deleteAsset } from "../../lib/supabaseStorage";
 import Layout from "../../components/Layout";
 import {
   Plus, Pencil, Trash2, X, Save,
   Briefcase, ArrowUp, ArrowDown, AlertTriangle,
-  Tag, Maximize2,
+  Tag, Maximize2, Upload, ImageIcon,
 } from "lucide-react";
 
 const EMPTY = {
@@ -78,6 +79,13 @@ export default function ManageExperience() {
   const [saving, setSaving]         = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
+  // upload state
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl]     = useState("");
+  const [uploading, setUploading]       = useState(false);
+  const [uploadPct, setUploadPct]       = useState(0);
+  const fileInputRef = useRef(null);
+
   /* ── fetch ── */
   const load = async () => {
     setLoading(true);
@@ -96,6 +104,8 @@ export default function ManageExperience() {
     const next = items.length ? Math.max(...items.map((i) => i.sort_order)) + 1 : 1;
     setForm({ ...EMPTY, sort_order: next });
     setEditId(null);
+    setSelectedFile(null);
+    setPreviewUrl("");
     setShowModal(true);
   };
 
@@ -113,19 +123,46 @@ export default function ManageExperience() {
       is_wide:     item.is_wide || false,
       sort_order:  item.sort_order,
     });
+    setPreviewUrl(item.icon_type === "image" ? item.icon_value : "");
+    setSelectedFile(null);
     setEditId(item.id);
     setShowModal(true);
   };
 
-  const closeModal = () => { setShowModal(false); setEditId(null); setForm(EMPTY); };
+  const closeModal = () => {
+    setShowModal(false);
+    setEditId(null);
+    setForm(EMPTY);
+    setSelectedFile(null);
+    setPreviewUrl("");
+    setUploadPct(0);
+  };
 
   /* ── save ── */
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
+      let icon_value = form.icon_value;
+
+      // upload jika tipe image dan ada file baru
+      if (form.icon_type === "image" && selectedFile) {
+        setUploading(true);
+        // hapus gambar lama
+        if (editId) {
+          const old = items.find((i) => i.id === editId);
+          if (old?.icon_type === "image" && old?.icon_value) {
+            await deleteAsset(pathFromPublicUrl(old.icon_value));
+          }
+        }
+        const { publicUrl } = await uploadAsset(selectedFile, "experience-icons", (p) => setUploadPct(p));
+        icon_value = publicUrl;
+        setUploading(false);
+      }
+
       const payload = {
         ...form,
+        icon_value,
         tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
         updated_at: new Date().toISOString(),
       };
@@ -143,12 +180,17 @@ export default function ManageExperience() {
       alert("Gagal menyimpan: " + err.message);
     } finally {
       setSaving(false);
+      setUploading(false);
     }
   };
 
   /* ── delete ── */
   const confirmDelete = async () => {
     if (!deleteTarget) return;
+    // hapus gambar dari storage jika tipe image
+    if (deleteTarget.icon_type === "image" && deleteTarget.icon_value) {
+      await deleteAsset(pathFromPublicUrl(deleteTarget.icon_value));
+    }
     await supabase.from("experience").delete().eq("id", deleteTarget.id);
     setDeleteTarget(null);
     await load();
@@ -335,17 +377,62 @@ export default function ManageExperience() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs text-gray-400 mb-1">
-                        {form.icon_type === "remix" ? "Class (ri-…)" : form.icon_type === "emoji" ? "Emoji" : "URL Gambar"}
+                        {form.icon_type === "remix" ? "Class (ri-…)" : form.icon_type === "emoji" ? "Emoji" : "URL atau Upload Gambar"}
                       </label>
-                      <input type={form.icon_type === "image" ? "url" : "text"}
-                        value={form.icon_value}
-                        onChange={(e) => f("icon_value", e.target.value)}
-                        className={inputCls}
-                        placeholder={
-                          form.icon_type === "remix" ? "ri-reactjs-line"
-                          : form.icon_type === "emoji" ? "💼"
-                          : "https://…/logo.png"
-                        } />
+                      {form.icon_type === "image" ? (
+                        <div className="space-y-2">
+                          {/* upload dropzone */}
+                          <div
+                            onClick={() => fileInputRef.current.click()}
+                            className="w-full border-2 border-dashed border-gray-200 rounded-xl flex items-center gap-2 px-3 py-2 cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                          >
+                            {previewUrl ? (
+                              <div className="w-9 h-9 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0"
+                                style={{ background: form.icon_bg }}>
+                                <img src={previewUrl} alt="" className="w-full h-full object-contain" />
+                              </div>
+                            ) : (
+                              <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <ImageIcon size={14} className="text-gray-300" />
+                              </div>
+                            )}
+                            <span className="text-xs text-gray-400 flex-1 truncate">
+                              {selectedFile ? selectedFile.name : "Klik upload gambar"}
+                            </span>
+                            <Upload size={13} className="text-gray-300 flex-shrink-0" />
+                          </div>
+                          <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (!file) return;
+                              if (!file.type.startsWith("image/")) { alert("Hanya file gambar"); return; }
+                              if (file.size > 5 * 1024 * 1024) { alert("Maks 5MB"); return; }
+                              setSelectedFile(file);
+                              const url = URL.createObjectURL(file);
+                              setPreviewUrl(url);
+                              f("icon_value", url);
+                            }} />
+                          {/* progress */}
+                          {uploading && (
+                            <div className="w-full bg-gray-100 rounded-full h-1.5">
+                              <div className="bg-gray-700 h-1.5 rounded-full transition-all" style={{ width: `${uploadPct}%` }} />
+                            </div>
+                          )}
+                          {/* atau URL manual */}
+                          <input type="url" value={selectedFile ? "" : form.icon_value}
+                            onChange={(e) => { f("icon_value", e.target.value); setPreviewUrl(e.target.value); setSelectedFile(null); }}
+                            placeholder="Atau paste URL gambar…"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs bg-gray-50 focus:bg-white focus:outline-none" />
+                        </div>
+                      ) : (
+                        <input type="text"
+                          value={form.icon_value}
+                          onChange={(e) => f("icon_value", e.target.value)}
+                          className={inputCls}
+                          placeholder={
+                            form.icon_type === "remix" ? "ri-reactjs-line" : "💼"
+                          } />
+                      )}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
@@ -463,10 +550,10 @@ export default function ManageExperience() {
                 className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-white transition-colors">
                 Batal
               </button>
-              <button type="submit" form="exp-form" disabled={saving}
+              <button type="submit" form="exp-form" disabled={saving || uploading}
                 className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-700 disabled:opacity-50 flex items-center gap-1.5 transition-colors">
                 <Save size={13} />
-                {saving ? "Menyimpan…" : editId ? "Update" : "Tambah"}
+                {uploading ? `Uploading ${uploadPct}%` : saving ? "Menyimpan…" : editId ? "Update" : "Tambah"}
               </button>
             </div>
           </div>
