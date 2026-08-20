@@ -12,6 +12,7 @@ import Divider from "../components/Divider";
 import EducationSection from "../components/EducationSection";
 
 import ChatRoom from "../components/ChatRoom";
+import QuotesSection from "../components/QuotesSection";
 
 export default function Page() {
   const [mounted, setMounted] = useState(false);
@@ -36,6 +37,9 @@ export default function Page() {
       <ChatRoom />
       <section className="max-w-4xl mx-auto px-5 pt-4">
         <ProfileSection />
+
+        <Divider />
+        <QuotesSection />
 
         <Divider />
         <GithubActivity />

@@ -9,8 +9,14 @@ const NavCreator = ({ children }) => {
     { path: '/', icon: 'ri-home-4-line', activeIcon: 'ri-home-4-fill', label: 'Home' },
     { path: '/projects', icon: 'ri-code-s-slash-line', activeIcon: 'ri-code-s-slash-fill', label: 'Projects' },
     { path: '/certificates', icon: 'ri-folders-line', activeIcon: 'ri-folders-fill', label: 'Certificates' },
-    { path: '/blogs', icon: 'ri-news-line', activeIcon: 'ri-news-fill', label: 'Blogs', isNew: true },
-    { path: '/others', icon: 'ri-apps-line', activeIcon: 'ri-apps-fill', label: 'Others', isNew: true, hideOnDesktop: true },
+    { path: '/blogs', icon: 'ri-news-line', activeIcon: 'ri-news-fill', label: 'Blogs' },
+    { path: '/others', icon: 'ri-apps-line', activeIcon: 'ri-apps-fill', label: 'Others', hideOnDesktop: true },
+  ];
+
+  // item tambahan yang hanya muncul di sidebar mobile (tidak di bottom nav)
+  const sidebarOnlyItems = [
+    { path: '/anime', icon: 'ri-tv-2-line', activeIcon: 'ri-tv-2-fill', label: 'Anime' },
+    { path: '/reels', icon: 'ri-film-line', activeIcon: 'ri-film-fill', label: 'Reels' },
   ];
 
   const toggleSidebar = () => {
@@ -43,26 +49,20 @@ const NavCreator = ({ children }) => {
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-6">
               {navItems.map((item) => {
-                // Skip item dengan hideOnDesktop di desktop view
                 if (item.hideOnDesktop) return null;
-
                 return (
                   <div key={item.path} className="relative">
                     <Link
                       to={item.path}
-                      className={`text-black hover:text-gray-600 transition-colors font-medium ${location.pathname === item.path ? 'text-gray-600 font-semibold' : ''
-                        }`}
+                      className={`text-black hover:text-gray-600 transition-colors font-medium ${location.pathname === item.path ? 'text-gray-600 font-semibold' : ''}`}
                     >
                       {item.label}
                     </Link>
-                    {item.isNew && (
-                      <span className="md:hidden absolute -top-2 -right-3 text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5 leading-none font-bold">
-                        NEW
-                      </span>
-                    )}
                   </div>
                 );
               })}
+              <Link to="/anime" className={`text-black hover:text-gray-600 transition-colors font-medium ${location.pathname === '/anime' ? 'text-gray-600 font-semibold' : ''}`}>Anime</Link>
+              <Link to="/reels" className={`text-black hover:text-gray-600 transition-colors font-medium ${location.pathname === '/reels' ? 'text-gray-600 font-semibold' : ''}`}>Reels</Link>
             </div>
 
             {/* Resumes Button - Kanan (Mobile & Desktop) */}
@@ -117,11 +117,25 @@ const NavCreator = ({ children }) => {
                     >
                       <i className={`${isActive ? item.activeIcon : item.icon} mr-3 text-xl`}></i>
                       {item.label}
-                      {item.isNew && (
-                        <span className="ml-2 text-xs bg-red-500 text-white rounded-full px-2 py-1 font-bold">
-                          NEW
-                        </span>
-                      )}
+                    </Link>
+                  );
+                })}
+
+                {/* Anime & Reels — hanya di sidebar */}
+                {sidebarOnlyItems.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={`flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors ${isActive
+                          ? 'bg-gray-100 text-gray-800'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
+                        }`}
+                      onClick={closeSidebar}
+                    >
+                      <i className={`${isActive ? item.activeIcon : item.icon} mr-3 text-xl`}></i>
+                      {item.label}
                     </Link>
                   );
                 })}
@@ -164,29 +178,18 @@ const NavCreator = ({ children }) => {
 
       {/* Bottom Navigation (Mobile Only) */}
       <div className="fixed bottom-0 left-0 right-0 md:hidden z-40 bg-white shadow-lg border-t border-gray-100">
-        <div className="grid grid-cols-5 h-16" style={{ height: '55px' }}>
+        <div className="grid grid-cols-5 h-[55px]">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
-              <div key={item.path} className="relative flex items-center justify-center">
-                <Link
-                  to={item.path}
-                  className="nav-item flex flex-col items-center justify-center text-[11px] transition-colors"
-                >
-                  <i
-                    className={`${isActive ? item.activeIcon : item.icon} text-[22px] ${isActive ? 'text-gray-600' : 'text-gray-500'
-                      }`}
-                  ></i>
-                  <span className={isActive ? 'text-gray-600 font-medium' : 'text-gray-600'}>
-                    {item.label}
-                  </span>
-                </Link>
-                {item.isNew && (
-                  <span className="absolute top-1 right-[18%] text-[8px] bg-red-500 text-white rounded-full px-0.5 py-0.5 font-bold leading-none">
-                    NEW
-                  </span>
-                )}
-              </div>
+              <Link
+                key={item.path}
+                to={item.path}
+                className="flex flex-col items-center justify-center text-[11px] transition-colors"
+              >
+                <i className={`${isActive ? item.activeIcon : item.icon} text-[22px] ${isActive ? 'text-gray-700' : 'text-gray-500'}`} />
+                <span className={isActive ? 'text-gray-700 font-medium' : 'text-gray-500'}>{item.label}</span>
+              </Link>
             );
           })}
         </div>

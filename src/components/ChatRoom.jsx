@@ -10,6 +10,8 @@ export default function ChatRoomComponents() {
     const [replyingTo, setReplyingTo] = useState(null);
     const [hoveredMessage, setHoveredMessage] = useState(null);
     const [dateHeaders, setDateHeaders] = useState({});
+    const [deletingId, setDeletingId] = useState(null);
+    const [confirmDelete, setConfirmDelete] = useState(null); // id pesan yang mau dihapus
 
     // Guest identity — simpan di localStorage
     const [guestName, setGuestName] = useState(() => localStorage.getItem('chat_name') || '');
@@ -43,10 +45,16 @@ export default function ChatRoomComponents() {
     }, [formatFullDate]);
 
     const fetchMessages = useCallback(async () => {
-        const { data } = await supabase.from('chat_messages').select('*').order('created_at', { ascending: true });
-        setMessages(data || []);
-        checkDateHeaders(data || []);
-    }, [checkDateHeaders]);
+        const { data } = await supabase
+            .from('chat_messages')
+            .select('*')
+            .order('created_at', { ascending: true });
+
+        // PRIVASI: hanya tampilkan pesan milik user ini + pesan admin (is_owner=true)
+        const filtered = (data || []).filter(m => m.uid === guestUid || m.is_owner === true);
+        setMessages(filtered);
+        checkDateHeaders(filtered);
+    }, [checkDateHeaders, guestUid]);
 
     useEffect(() => {
         fetchMessages();
@@ -88,7 +96,12 @@ export default function ChatRoomComponents() {
         setReplyingTo(null);
     };
 
-    const unreadCount = messages.filter(m => m.uid !== guestUid && m.uid !== OWNER_UID).length;
+    const handleDeleteMessage = async (id) => {
+        setDeletingId(id);
+        await supabase.from('chat_messages').delete().eq('id', id);
+        setConfirmDelete(null);
+        setDeletingId(null);
+    };
 
     return (
         <div className="fixed bottom-[70px] md:bottom-6 right-6 z-50">
@@ -132,6 +145,7 @@ export default function ChatRoomComponents() {
                         {messages.map((msg, index) => {
                             const isMe = msg.uid === guestUid;
                             const isOwner = msg.is_owner;
+                            const isConfirming = confirmDelete === msg.id;
                             return (
                                 <React.Fragment key={msg.id}>
                                     {dateHeaders[index] && (
@@ -143,9 +157,9 @@ export default function ChatRoomComponents() {
                                         id={`msg-${index}`}
                                         className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-1`}
                                         onMouseEnter={() => setHoveredMessage(msg.id)}
-                                        onMouseLeave={() => setHoveredMessage(null)}
+                                        onMouseLeave={() => { setHoveredMessage(null); }}
                                     >
-                                        <div className={`max-w-[75%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
+                                        <div className={`max-w-[80%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
                                             {/* Nama pengirim */}
                                             {!isMe && (
                                                 <div className="flex items-center gap-1 mb-0.5 ml-1">
@@ -162,18 +176,56 @@ export default function ChatRoomComponents() {
                                                 </div>
                                             )}
 
-                                            <div className="flex items-end gap-1">
+                                            <div className={`flex items-end gap-1 ${isMe ? 'flex-row-reverse' : ''}`}>
                                                 <div className={`px-3 py-1.5 rounded-2xl text-sm leading-snug relative
                                                     ${isMe ? 'bg-gray-700 text-white rounded-br-sm' : isOwner ? 'bg-gray-800 text-white rounded-bl-sm' : 'bg-gray-100 text-gray-800 rounded-bl-sm'}`}>
                                                     {msg.text}
                                                 </div>
-                                                {/* Reply button */}
-                                                {hoveredMessage === msg.id && !isMe && (
-                                                    <button onClick={() => setReplyingTo(msg)} className="text-gray-300 hover:text-gray-500 text-xs" title="Reply">
-                                                        <i className="ri-reply-line"></i>
-                                                    </button>
+
+                                                {/* Tombol aksi: reply (untuk pesan orang lain) & delete (untuk pesan sendiri) */}
+                                                {hoveredMessage === msg.id && (
+                                                    <div className={`flex gap-0.5 ${isMe ? 'flex-row-reverse' : ''}`}>
+                                                        {!isMe && (
+                                                            <button
+                                                                onClick={() => setReplyingTo(msg)}
+                                                                className="text-gray-300 hover:text-gray-500 text-xs p-0.5"
+                                                                title="Balas"
+                                                            >
+                                                                <i className="ri-reply-line"></i>
+                                                            </button>
+                                                        )}
+                                                        {isMe && (
+                                                            <button
+                                                                onClick={() => setConfirmDelete(msg.id)}
+                                                                className="text-gray-300 hover:text-red-400 text-xs p-0.5"
+                                                                title="Hapus pesan"
+                                                            >
+                                                                <i className="ri-delete-bin-line"></i>
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </div>
+
+                                            {/* Konfirmasi hapus inline */}
+                                            {isConfirming && (
+                                                <div className="mt-1 flex items-center gap-1 justify-end">
+                                                    <span className="text-[10px] text-gray-500">Hapus?</span>
+                                                    <button
+                                                        onClick={() => handleDeleteMessage(msg.id)}
+                                                        disabled={deletingId === msg.id}
+                                                        className="text-[10px] bg-red-500 text-white px-2 py-0.5 rounded hover:bg-red-600 disabled:opacity-60"
+                                                    >
+                                                        {deletingId === msg.id ? '...' : 'Ya'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setConfirmDelete(null)}
+                                                        className="text-[10px] bg-gray-200 text-gray-600 px-2 py-0.5 rounded hover:bg-gray-300"
+                                                    >
+                                                        Batal
+                                                    </button>
+                                                </div>
+                                            )}
 
                                             <span className={`text-[9px] text-gray-400 mt-0.5 ${isMe ? 'text-right' : ''}`}>{formatTime(msg.created_at)}</span>
                                         </div>

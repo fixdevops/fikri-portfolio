@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../supabase";
 import { uploadAsset, pathFromPublicUrl, deleteAsset } from "../../lib/supabaseStorage";
 import Layout from "../../components/Layout";
+import ImageCropper from "../../components/ImageCropper";
 import {
   Plus, Pencil, Trash2, X, Save,
   Briefcase, ArrowUp, ArrowDown, AlertTriangle,
@@ -92,6 +93,9 @@ export default function ManageExperience() {
   const [previewUrl, setPreviewUrl]     = useState("");
   const [uploading, setUploading]       = useState(false);
   const [uploadPct, setUploadPct]       = useState(0);
+  const [cropSrc, setCropSrc]           = useState(null);
+  const [showCropper, setShowCropper]   = useState(false);
+  const [croppedBlob, setCroppedBlob]   = useState(null);
   const fileInputRef = useRef(null);
 
   /* ── fetch ── */
@@ -147,6 +151,9 @@ export default function ManageExperience() {
     setSelectedFile(null);
     setPreviewUrl("");
     setUploadPct(0);
+    setCropSrc(null);
+    setShowCropper(false);
+    setCroppedBlob(null);
   };
 
   /* ── save ── */
@@ -157,7 +164,7 @@ export default function ManageExperience() {
       let icon_value = form.icon_value;
 
       // upload jika tipe image dan ada file baru
-      if (form.icon_type === "image" && selectedFile) {
+      if (form.icon_type === "image" && (croppedBlob || selectedFile)) {
         setUploading(true);
         // hapus gambar lama
         if (editId) {
@@ -166,7 +173,11 @@ export default function ManageExperience() {
             await deleteAsset(pathFromPublicUrl(old.icon_value));
           }
         }
-        const { publicUrl } = await uploadAsset(selectedFile, "experience-icons", (p) => setUploadPct(p));
+        // pakai croppedBlob jika ada, fallback ke selectedFile
+        const fileToUpload = croppedBlob
+          ? new File([croppedBlob], "cropped-icon.png", { type: "image/png" })
+          : selectedFile;
+        const { publicUrl } = await uploadAsset(fileToUpload, "experience-icons", (p) => setUploadPct(p));
         icon_value = publicUrl;
         setUploading(false);
       }
@@ -424,9 +435,10 @@ export default function ManageExperience() {
                               if (!file.type.startsWith("image/")) { alert("Hanya file gambar"); return; }
                               if (file.size > 5 * 1024 * 1024) { alert("Maks 5MB"); return; }
                               setSelectedFile(file);
-                              const url = URL.createObjectURL(file);
-                              setPreviewUrl(url);
-                              f("icon_value", url);
+                              setCropSrc(URL.createObjectURL(file));
+                              setShowCropper(true);
+                              // reset input agar bisa pilih file sama lagi
+                              e.target.value = "";
                             }} />
                           {/* progress */}
                           {uploading && (
@@ -662,6 +674,27 @@ export default function ManageExperience() {
           </div>
         </div>
       )}
+      {/* ── Image Cropper Modal ── */}
+      {showCropper && cropSrc && (
+        <ImageCropper
+          imageSrc={cropSrc}
+          aspect={1}
+          circularCrop={true}
+          onCrop={(blob) => {
+            setCroppedBlob(blob);
+            const url = URL.createObjectURL(blob);
+            setPreviewUrl(url);
+            f("icon_value", url);
+            setShowCropper(false);
+          }}
+          onCancel={() => {
+            setShowCropper(false);
+            setCropSrc(null);
+            setSelectedFile(null);
+          }}
+        />
+      )}
+
     </Layout>
   );
 }

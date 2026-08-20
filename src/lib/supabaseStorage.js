@@ -7,7 +7,9 @@ export const STORAGE_BUCKET = "portfolio-assets";
 // Ekstensi yang diizinkan
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jpg"];
 const ALLOWED_DOC_TYPES = ["application/pdf", "text/html"];
+const ALLOWED_AUDIO_TYPES = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/flac", "audio/aac", "audio/x-m4a", "audio/mp4"];
 const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_AUDIO_SIZE_BYTES = 50 * 1024 * 1024; // 50MB untuk audio
 
 // Membersihkan nama file agar aman dipakai sebagai path di Storage.
 const sanitizeFileName = (name) => {
@@ -111,4 +113,61 @@ export function pathFromPublicUrl(url) {
   const idx = url.indexOf(marker);
   if (idx === -1) return "";
   return decodeURIComponent(url.slice(idx + marker.length));
+}
+
+/**
+ * Upload file audio ke Supabase Storage (bucket PUBLIC).
+ *
+ * @param {File} file - File audio dari <input type="file">
+ * @param {(percent:number)=>void} [onProgress] - Callback progres
+ * @returns {Promise<{publicUrl:string, path:string}>}
+ */
+export async function uploadAudio(file, onProgress) {
+  if (!isSupabaseConfigured) {
+    throw new Error("Supabase belum dikonfigurasi.");
+  }
+
+  if (!file) throw new Error("File tidak ditemukan.");
+
+  const ext = (file.name || "").split(".").pop().toLowerCase();
+  const isAllowed =
+    ALLOWED_AUDIO_TYPES.includes(file.type) ||
+    ["mp3", "wav", "ogg", "flac", "aac", "m4a"].includes(ext);
+
+  if (!isAllowed) {
+    throw new Error("Format tidak didukung. Gunakan MP3, WAV, OGG, FLAC, AAC, atau M4A.");
+  }
+
+  if (file.size > MAX_AUDIO_SIZE_BYTES) {
+    throw new Error("Ukuran file melebihi batas 50MB.");
+  }
+
+  const timestamp = Date.now();
+  const safeName = sanitizeFileName(file.name);
+  const filePath = `audio/${timestamp}-${safeName}`;
+
+  onProgress?.(10);
+
+  const { error } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type || "audio/mpeg",
+    });
+
+  if (error) throw error;
+
+  onProgress?.(90);
+
+  const { data: publicData } = supabase.storage
+    .from(STORAGE_BUCKET)
+    .getPublicUrl(filePath);
+
+  onProgress?.(100);
+
+  return {
+    publicUrl: publicData.publicUrl,
+    path: filePath,
+  };
 }

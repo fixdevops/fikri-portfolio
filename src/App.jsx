@@ -11,6 +11,7 @@ import { usePageTracking } from './hooks/usePageTracking';
 import Resume from './pages/Resume';
 import HomePage from './pages/HomePage';
 import ChatRoom from './pages/ChatRoom';
+import AmbientPlayer from './components/AmbientPlayer';
 
 // ─── Frontdev Pages ─────────────────────────────────
 import Project from './pages/Project';
@@ -21,6 +22,8 @@ import Blogs from './pages/Blog';
 import DetailBlog from './pages/DetailBlog';
 import Writings01 from './pages/DetailWritings/tailwind-ui-is-now-tailwind-plus';
 import OtherFrontDev from './pages/OtherFrontDev';
+import AnimePage from './pages/Anime';
+import ReelsPage from './pages/Reels';
 
 // ─── Admin Pages ────────────────────────────────────
 import Login from './pages/admin/Login';
@@ -53,6 +56,8 @@ function AppRoutes() {
       <Route path="/guestbook" element={<Guestbook />} />
       <Route path="/github" element={<GithubRepo />} />
       <Route path="/others" element={<OtherFrontDev />} />
+      <Route path="/anime" element={<AnimePage />} />
+      <Route path="/reels" element={<ReelsPage />} />
       <Route path="/blogs" element={<Blogs />} />
       <Route path="/blogs/:slug" element={<DetailBlog />} />
       <Route path="/writings/tailwind-ui-is-now-tailwind-plus" element={<Writings01 />} />
@@ -80,6 +85,7 @@ function AppRoutes() {
 function App() {
   return (
     <Router>
+      <AmbientPlayer />
       <AppRoutes />
     </Router>
   );

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../supabase";
 import { uploadAsset, pathFromPublicUrl, deleteAsset } from "../../lib/supabaseStorage";
 import Layout from "../../components/Layout";
+import ImageCropper from "../../components/ImageCropper";
 import {
   Plus, Pencil, Trash2, X, Save,
   GraduationCap, ArrowUp, ArrowDown, ImageOff,
@@ -40,6 +41,9 @@ export default function ManageEducation() {
   const [previewUrl, setPreviewUrl]     = useState("");
   const [uploading, setUploading]       = useState(false);
   const [uploadPct, setUploadPct]       = useState(0);
+  const [cropSrc, setCropSrc]           = useState(null);
+  const [showCropper, setShowCropper]   = useState(false);
+  const [croppedBlob, setCroppedBlob]   = useState(null);
   const fileInputRef = useRef(null);
 
   /* ── fetch ── */
@@ -91,6 +95,9 @@ export default function ManageEducation() {
     setSelectedFile(null);
     setPreviewUrl("");
     setUploadPct(0);
+    setCropSrc(null);
+    setShowCropper(false);
+    setCroppedBlob(null);
   };
 
   /* ── file pick ── */
@@ -110,14 +117,16 @@ export default function ManageEducation() {
     try {
       let logo_url = form.logo_url;
 
-      if (selectedFile) {
+      if (selectedFile || croppedBlob) {
         setUploading(true);
-        // hapus logo lama kalau ada
         if (editId) {
           const old = items.find((i) => i.id === editId);
           if (old?.logo_url) await deleteAsset(pathFromPublicUrl(old.logo_url));
         }
-        const { publicUrl } = await uploadAsset(selectedFile, "education-logos", (p) => setUploadPct(p));
+        const fileToUpload = croppedBlob
+          ? new File([croppedBlob], "cropped-logo.png", { type: "image/png" })
+          : selectedFile;
+        const { publicUrl } = await uploadAsset(fileToUpload, "education-logos", (p) => setUploadPct(p));
         logo_url = publicUrl;
         setUploading(false);
       }
@@ -327,7 +336,16 @@ export default function ManageEducation() {
                     ref={fileInputRef}
                     type="file"
                     accept="image/*"
-                    onChange={handleFileChange}
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (!file) return;
+                      if (!file.type.startsWith("image/")) { alert("Hanya file gambar"); return; }
+                      if (file.size > 5 * 1024 * 1024) { alert("Maks 5MB"); return; }
+                      setSelectedFile(file);
+                      setCropSrc(URL.createObjectURL(file));
+                      setShowCropper(true);
+                      e.target.value = "";
+                    }}
                     className="sr-only"
                   />
 
@@ -540,6 +558,26 @@ export default function ManageEducation() {
           </div>
         </div>
       )}
+      {/* ── Image Cropper Modal ── */}
+      {showCropper && cropSrc && (
+        <ImageCropper
+          imageSrc={cropSrc}
+          aspect={1}
+          circularCrop={false}
+          onCrop={(blob) => {
+            setCroppedBlob(blob);
+            const url = URL.createObjectURL(blob);
+            setPreviewUrl(url);
+            setShowCropper(false);
+          }}
+          onCancel={() => {
+            setShowCropper(false);
+            setCropSrc(null);
+            setSelectedFile(null);
+          }}
+        />
+      )}
+
     </Layout>
   );
 }
