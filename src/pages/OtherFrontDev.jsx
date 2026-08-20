@@ -51,18 +51,6 @@ export default function ShortcutPage() {
                             href="https://github.com/fixdevops"
                         />
                         <DanaStyleCard
-                            icon="ri-mail-line"
-                            title="Email"
-                            color="bg-red-400"
-                            href="mailto:fixzdeveloper@gmail.com"
-                        />
-                        <DanaStyleCard
-                            icon="ri-whatsapp-line"
-                            title="WhatsApp"
-                            color="bg-green-500"
-                            href="https://wa.me/6282285512813"
-                        />
-                        <DanaStyleCard
                             icon="ri-twitter-x-line"
                             title="Twitter/X"
                             color="bg-black"
@@ -161,38 +149,7 @@ export default function ShortcutPage() {
                     </div>
                 </section>
 
-                {/* Contact Section */}
-                <section className="mb-10">
-                    <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                        <i className="ri-contacts-line mr-2"></i> Kontak
-                    </h2>
-                    <div className="grid grid-cols-4 gap-4">
-                        <DanaStyleCard
-                            icon="ri-whatsapp-line"
-                            title="WhatsApp"
-                            color="bg-green-500"
-                            href="https://wa.me/6282285512813"
-                        />
-                        <DanaStyleCard
-                            icon="ri-mail-send-line"
-                            title="Email"
-                            color="bg-red-400"
-                            href="mailto:fixzdeveloper@gmail.com"
-                        />
-                        <DanaStyleCard
-                            icon="ri-linkedin-line"
-                            title="LinkedIn"
-                            color="bg-blue-600"
-                            href="https://www.linkedin.com/in/mfikriasyamjauhary"
-                        />
-                        <DanaStyleCard
-                            icon="ri-github-line"
-                            title="GitHub"
-                            color="bg-gray-800"
-                            href="https://github.com/fixdevops"
-                        />
-                    </div>
-                </section>
+
             </section>
             <Footer />
         </div>
