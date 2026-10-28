@@ -14,10 +14,7 @@ const NavCreator = ({ children }) => {
   ];
 
   // item tambahan yang hanya muncul di sidebar mobile (tidak di bottom nav)
-  const sidebarOnlyItems = [
-    { path: '/anime', icon: 'ri-tv-2-line', activeIcon: 'ri-tv-2-fill', label: 'Anime' },
-    { path: '/reels', icon: 'ri-film-line', activeIcon: 'ri-film-fill', label: 'Reels' },
-  ];
+  const sidebarOnlyItems = [];
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -61,8 +58,7 @@ const NavCreator = ({ children }) => {
                   </div>
                 );
               })}
-              <Link to="/anime" className={`text-black hover:text-gray-600 transition-colors font-medium ${location.pathname === '/anime' ? 'text-gray-600 font-semibold' : ''}`}>Anime</Link>
-              <Link to="/reels" className={`text-black hover:text-gray-600 transition-colors font-medium ${location.pathname === '/reels' ? 'text-gray-600 font-semibold' : ''}`}>Reels</Link>
+
             </div>
 
             {/* Resumes Button - Kanan (Mobile & Desktop) */}
@@ -121,24 +117,7 @@ const NavCreator = ({ children }) => {
                   );
                 })}
 
-                {/* Anime & Reels — hanya di sidebar */}
-                {sidebarOnlyItems.map((item) => {
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={`flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors ${isActive
-                          ? 'bg-gray-100 text-gray-800'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
-                        }`}
-                      onClick={closeSidebar}
-                    >
-                      <i className={`${isActive ? item.activeIcon : item.icon} mr-3 text-xl`}></i>
-                      {item.label}
-                    </Link>
-                  );
-                })}
+
 
                 {/* Resumes Link in Sidebar */}
                 <Link
