@@ -355,30 +355,7 @@ export default function AmbientPlayer() {
         )}
 
         {/* ── Floating mini button ── */}
-        <div className="flex items-center gap-2">
-          {/* Toggle video - mini button */}
-          <button
-            onClick={() => setShowVideo(v => !v)}
-            title={showVideo ? 'Matikan video' : 'Nyalakan video'}
-            className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105 active:scale-95"
-            style={{
-              background: showVideo ? 'rgba(29,185,84,0.85)' : 'rgba(30,30,30,0.85)',
-              border: `1.5px solid ${showVideo ? '#1db954' : 'rgba(255,255,255,0.15)'}`,
-              backdropFilter: 'blur(8px)'
-            }}
-          >
-            {showVideo ? (
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="white">
-                <path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/>
-              </svg>
-            ) : (
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)">
-                <path d="M21 6.5l-4 4V7a1 1 0 0 0-1-1H9.82L21 17.18V6.5zM3.27 2L2 3.27 4.73 6H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12c.21 0 .39-.08.54-.18L19.73 21 21 19.73 3.27 2z"/>
-              </svg>
-            )}
-          </button>
-
-          <button
+        <button
             onClick={() => { if (!isExpanded) setIsExpanded(true); else togglePlay(); }}
             title={isExpanded ? (isPlaying ? 'Pause' : 'Play') : 'Open Player'}
             className="relative w-12 h-12 rounded-full overflow-hidden shadow-xl transition-all duration-300 hover:scale-105 active:scale-95"
@@ -414,7 +391,6 @@ export default function AmbientPlayer() {
               )}
             </span>
           </button>
-        </div>
       </div>
 
       <style>{`
