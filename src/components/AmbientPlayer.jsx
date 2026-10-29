@@ -110,11 +110,10 @@ export default function AmbientPlayer() {
           FLOATING WIDGETS (kiri bawah, berdampingan)
           musik (kiri) | video (kanan)
           ═══════════════════════════════════════ */}
-      {hasAudio && (
         <div className="fixed bottom-[70px] md:bottom-6 left-4 z-50 flex flex-col items-start gap-2">
 
-          {/* Music player card */}
-          {isExpanded && (
+          {/* Music player card — hanya kalau ada audio */}
+          {hasAudio && isExpanded && (
             <div
               className="w-64 rounded-2xl overflow-hidden shadow-2xl"
               style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.08)' }}
@@ -258,40 +257,42 @@ export default function AmbientPlayer() {
             </div>
           )}
 
-          {/* Baris bawah: musik (kiri) + video (kanan) berdampingan */}
+          {/* Baris bawah: musik (kiri, hanya kalau ada audio) + video (kanan, selalu) */}
           <div className="flex items-center gap-2">
 
-            {/* Floating music icon button */}
-            <button
-              onClick={() => { if (!isExpanded) setIsExpanded(true); else togglePlay(); }}
-              title={isExpanded ? (isPlaying ? 'Pause' : 'Play') : 'Open Player'}
-              className="relative w-12 h-12 rounded-full overflow-hidden shadow-xl transition-all duration-300 hover:scale-105 active:scale-95"
-              style={{ border: isPlaying ? '2px solid #1db954' : '2px solid rgba(255,255,255,0.15)' }}
-            >
-              {current?.cover_url
-                ? <img src={current.cover_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                : <div className="absolute inset-0" style={{ background: '#1db954' }} />
-              }
-              <span className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.4)' }} />
-              {isPlaying && (
-                <span className="absolute inset-0 rounded-full animate-ping"
-                  style={{ border: '2px solid #1db954', animationDuration: '1.5s' }} />
-              )}
-              <span className="relative z-10 flex items-center justify-center w-full h-full">
-                {isPlaying ? (
-                  <span className="flex items-end gap-[2px] h-4">
-                    {[8,14,10,13,7].map((h,i) => (
-                      <span key={i} className="w-[2.5px] rounded-full bg-white"
-                        style={{ height:`${h}px`, animation:`eq${(i%4)+1} ${0.4+i*0.1}s ease-in-out infinite alternate` }} />
-                    ))}
-                  </span>
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="white" style={{ marginLeft:2 }}>
-                    <path d="M8 5v14l11-7z"/>
-                  </svg>
+            {/* Floating music icon button — hanya kalau ada audio */}
+            {hasAudio && (
+              <button
+                onClick={() => { if (!isExpanded) setIsExpanded(true); else togglePlay(); }}
+                title={isExpanded ? (isPlaying ? 'Pause' : 'Play') : 'Open Player'}
+                className="relative w-12 h-12 rounded-full overflow-hidden shadow-xl transition-all duration-300 hover:scale-105 active:scale-95"
+                style={{ border: isPlaying ? '2px solid #1db954' : '2px solid rgba(255,255,255,0.15)' }}
+              >
+                {current?.cover_url
+                  ? <img src={current.cover_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  : <div className="absolute inset-0" style={{ background: '#1db954' }} />
+                }
+                <span className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.4)' }} />
+                {isPlaying && (
+                  <span className="absolute inset-0 rounded-full animate-ping"
+                    style={{ border: '2px solid #1db954', animationDuration: '1.5s' }} />
                 )}
-              </span>
-            </button>
+                <span className="relative z-10 flex items-center justify-center w-full h-full">
+                  {isPlaying ? (
+                    <span className="flex items-end gap-[2px] h-4">
+                      {[8,14,10,13,7].map((h,i) => (
+                        <span key={i} className="w-[2.5px] rounded-full bg-white"
+                          style={{ height:`${h}px`, animation:`eq${(i%4)+1} ${0.4+i*0.1}s ease-in-out infinite alternate` }} />
+                      ))}
+                    </span>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="white" style={{ marginLeft:2 }}>
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                  )}
+                </span>
+              </button>
+            )}
 
             {/* Floating video icon button */}
             <button
@@ -348,7 +349,6 @@ export default function AmbientPlayer() {
           )}
 
         </div>
-      )}
 
       <style>{`
         @keyframes eq1 { from { height: 3px } to { height: 13px } }
