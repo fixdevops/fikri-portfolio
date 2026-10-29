@@ -12,7 +12,10 @@ export default function AmbientPlayer() {
   const [currentTime, setCurrentTime] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showQueue, setShowQueue] = useState(false);
+  const [showVideo, setShowVideo] = useState(true);   // video visible
+  const [videoMuted, setVideoMuted] = useState(true); // video always muted (audio from player)
   const audioRef = useRef(null);
+  const videoRef = useRef(null);
 
   useEffect(() => {
     supabase
@@ -20,6 +23,14 @@ export default function AmbientPlayer() {
       .select('id, title, audio_url, cover_url')
       .order('created_at', { ascending: true })
       .then(({ data }) => { setAudios(data || []); setLoading(false); });
+  }, []);
+
+  // Auto-play video on mount
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = true;
+      videoRef.current.play().catch(() => {});
+    }
   }, []);
 
   useEffect(() => {
@@ -93,6 +104,30 @@ export default function AmbientPlayer() {
       >
         <source src={current?.audio_url} />
       </audio>
+
+      {/* ── Ambient Background Video ── */}
+      <div
+        className="fixed inset-0 z-0 pointer-events-none transition-opacity duration-700"
+        style={{ opacity: showVideo ? 1 : 0 }}
+      >
+        <video
+          ref={videoRef}
+          src="/assets/vidiohome.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full h-full object-cover"
+          style={{ filter: 'brightness(0.35) saturate(1.2)' }}
+        />
+        {/* Gradient overlay supaya konten tetap terbaca */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.15) 100%)'
+          }}
+        />
+      </div>
 
       <div className="fixed bottom-[70px] md:bottom-6 left-4 z-50 flex flex-col items-start gap-2">
 
@@ -286,47 +321,100 @@ export default function AmbientPlayer() {
                   <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.5v9A4.5 4.5 0 0 0 16.5 12z"/>
                 </svg>
               </div>
+
+              {/* Video toggle button */}
+              <button
+                onClick={() => setShowVideo(v => !v)}
+                className="w-full mt-3 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-medium transition-all"
+                style={{
+                  background: showVideo ? 'rgba(29,185,84,0.15)' : 'rgba(255,255,255,0.07)',
+                  color: showVideo ? '#1db954' : 'rgba(255,255,255,0.45)',
+                  border: `1px solid ${showVideo ? 'rgba(29,185,84,0.3)' : 'rgba(255,255,255,0.08)'}`
+                }}
+              >
+                {showVideo ? (
+                  <>
+                    {/* video-on icon */}
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/>
+                    </svg>
+                    Video On
+                  </>
+                ) : (
+                  <>
+                    {/* video-off icon */}
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M21 6.5l-4 4V7a1 1 0 0 0-1-1H9.82L21 17.18V6.5zM3.27 2L2 3.27 4.73 6H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12c.21 0 .39-.08.54-.18L19.73 21 21 19.73 3.27 2z"/>
+                    </svg>
+                    Video Off
+                  </>
+                )}
+              </button>
             </div>
           </div>
         )}
 
         {/* ── Floating mini button ── */}
-        <button
-          onClick={() => { if (!isExpanded) setIsExpanded(true); else togglePlay(); }}
-          title={isExpanded ? (isPlaying ? 'Pause' : 'Play') : 'Open Player'}
-          className="relative w-12 h-12 rounded-full overflow-hidden shadow-xl transition-all duration-300 hover:scale-105 active:scale-95"
-          style={{ border: isPlaying ? '2px solid #1db954' : '2px solid rgba(255,255,255,0.15)' }}
-        >
-          {/* Album art sebagai background */}
-          {current?.cover_url
-            ? <img src={current.cover_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
-            : <div className="absolute inset-0" style={{ background: '#1db954' }} />
-          }
-          {/* Dark overlay */}
-          <span className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.4)' }} />
-
-          {/* Pulse ring */}
-          {isPlaying && (
-            <span className="absolute inset-0 rounded-full animate-ping"
-              style={{ border: '2px solid #1db954', animationDuration: '1.5s' }} />
-          )}
-
-          {/* Icon */}
-          <span className="relative z-10 flex items-center justify-center w-full h-full">
-            {isPlaying ? (
-              <span className="flex items-end gap-[2px] h-4">
-                {[8, 14, 10, 13, 7].map((h, i) => (
-                  <span key={i} className="w-[2.5px] rounded-full bg-white"
-                    style={{ height: `${h}px`, animation: `eq${(i % 4) + 1} ${0.4 + i * 0.1}s ease-in-out infinite alternate` }} />
-                ))}
-              </span>
+        <div className="flex items-center gap-2">
+          {/* Toggle video - mini button */}
+          <button
+            onClick={() => setShowVideo(v => !v)}
+            title={showVideo ? 'Matikan video' : 'Nyalakan video'}
+            className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105 active:scale-95"
+            style={{
+              background: showVideo ? 'rgba(29,185,84,0.85)' : 'rgba(30,30,30,0.85)',
+              border: `1.5px solid ${showVideo ? '#1db954' : 'rgba(255,255,255,0.15)'}`,
+              backdropFilter: 'blur(8px)'
+            }}
+          >
+            {showVideo ? (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="white">
+                <path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/>
+              </svg>
             ) : (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="white" style={{ marginLeft: 2 }}>
-                <path d="M8 5v14l11-7z"/>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)">
+                <path d="M21 6.5l-4 4V7a1 1 0 0 0-1-1H9.82L21 17.18V6.5zM3.27 2L2 3.27 4.73 6H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12c.21 0 .39-.08.54-.18L19.73 21 21 19.73 3.27 2z"/>
               </svg>
             )}
-          </span>
-        </button>
+          </button>
+
+          <button
+            onClick={() => { if (!isExpanded) setIsExpanded(true); else togglePlay(); }}
+            title={isExpanded ? (isPlaying ? 'Pause' : 'Play') : 'Open Player'}
+            className="relative w-12 h-12 rounded-full overflow-hidden shadow-xl transition-all duration-300 hover:scale-105 active:scale-95"
+            style={{ border: isPlaying ? '2px solid #1db954' : '2px solid rgba(255,255,255,0.15)' }}
+          >
+            {/* Album art sebagai background */}
+            {current?.cover_url
+              ? <img src={current.cover_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              : <div className="absolute inset-0" style={{ background: '#1db954' }} />
+            }
+            {/* Dark overlay */}
+            <span className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.4)' }} />
+
+            {/* Pulse ring */}
+            {isPlaying && (
+              <span className="absolute inset-0 rounded-full animate-ping"
+                style={{ border: '2px solid #1db954', animationDuration: '1.5s' }} />
+            )}
+
+            {/* Icon */}
+            <span className="relative z-10 flex items-center justify-center w-full h-full">
+              {isPlaying ? (
+                <span className="flex items-end gap-[2px] h-4">
+                  {[8, 14, 10, 13, 7].map((h, i) => (
+                    <span key={i} className="w-[2.5px] rounded-full bg-white"
+                      style={{ height: `${h}px`, animation: `eq${(i % 4) + 1} ${0.4 + i * 0.1}s ease-in-out infinite alternate` }} />
+                  ))}
+                </span>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="white" style={{ marginLeft: 2 }}>
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              )}
+            </span>
+          </button>
+        </div>
       </div>
 
       <style>{`
