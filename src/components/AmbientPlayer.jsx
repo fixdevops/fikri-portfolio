@@ -107,81 +107,8 @@ export default function AmbientPlayer() {
       )}
 
       {/* ═══════════════════════════════════════
-          VIDEO FLOATING WIDGET (kanan bawah)
-          ═══════════════════════════════════════ */}
-      <div className="fixed bottom-[70px] md:bottom-6 right-4 z-50 flex flex-col items-end gap-2">
-
-        {/* Video player card — muncul saat videoOpen */}
-        {videoOpen && (
-          <div
-            className="rounded-2xl overflow-hidden shadow-2xl"
-            style={{
-              width: '220px',
-              border: '1px solid rgba(255,255,255,0.12)',
-              background: '#000'
-            }}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-3 py-2"
-              style={{ background: 'rgba(0,0,0,0.7)' }}>
-              <span className="text-white text-[11px] font-semibold tracking-wide opacity-70">Ambient Video</span>
-              <button
-                onClick={() => setVideoOpen(false)}
-                className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
-              >
-                <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                  <path d="M1 1l10 10M11 1L1 11" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-              </button>
-            </div>
-
-            {/* Video */}
-            <div className="relative" style={{ aspectRatio: '16/9' }}>
-              <video
-                ref={videoRef}
-                src="/assets/vidiohome.mp4"
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Floating video icon button */}
-        <button
-          onClick={() => setVideoOpen(v => !v)}
-          title={videoOpen ? 'Tutup video' : 'Buka video'}
-          className="relative w-12 h-12 rounded-full overflow-hidden shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center"
-          style={{
-            background: videoOpen ? '#1db954' : 'rgba(20,20,20,0.85)',
-            border: `2px solid ${videoOpen ? '#1db954' : 'rgba(255,255,255,0.2)'}`,
-            backdropFilter: 'blur(8px)'
-          }}
-        >
-          {/* Pulse ring saat video terbuka */}
-          {videoOpen && (
-            <span className="absolute inset-0 rounded-full animate-ping"
-              style={{ border: '2px solid #1db954', animationDuration: '2s' }} />
-          )}
-          <span className="relative z-10">
-            {videoOpen ? (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-                <path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/>
-              </svg>
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)">
-                <path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/>
-              </svg>
-            )}
-          </span>
-        </button>
-      </div>
-
-      {/* ═══════════════════════════════════════
-          MUSIC FLOATING WIDGET (kiri bawah)
+          FLOATING WIDGETS (kiri bawah, berdampingan)
+          musik (kiri) | video (kanan)
           ═══════════════════════════════════════ */}
       {hasAudio && (
         <div className="fixed bottom-[70px] md:bottom-6 left-4 z-50 flex flex-col items-start gap-2">
@@ -331,37 +258,95 @@ export default function AmbientPlayer() {
             </div>
           )}
 
-          {/* Floating music icon button */}
-          <button
-            onClick={() => { if (!isExpanded) setIsExpanded(true); else togglePlay(); }}
-            title={isExpanded ? (isPlaying ? 'Pause' : 'Play') : 'Open Player'}
-            className="relative w-12 h-12 rounded-full overflow-hidden shadow-xl transition-all duration-300 hover:scale-105 active:scale-95"
-            style={{ border: isPlaying ? '2px solid #1db954' : '2px solid rgba(255,255,255,0.15)' }}
-          >
-            {current?.cover_url
-              ? <img src={current.cover_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
-              : <div className="absolute inset-0" style={{ background: '#1db954' }} />
-            }
-            <span className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.4)' }} />
-            {isPlaying && (
-              <span className="absolute inset-0 rounded-full animate-ping"
-                style={{ border: '2px solid #1db954', animationDuration: '1.5s' }} />
-            )}
-            <span className="relative z-10 flex items-center justify-center w-full h-full">
-              {isPlaying ? (
-                <span className="flex items-end gap-[2px] h-4">
-                  {[8,14,10,13,7].map((h,i) => (
-                    <span key={i} className="w-[2.5px] rounded-full bg-white"
-                      style={{ height:`${h}px`, animation:`eq${(i%4)+1} ${0.4+i*0.1}s ease-in-out infinite alternate` }} />
-                  ))}
-                </span>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="white" style={{ marginLeft:2 }}>
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
+          {/* Baris bawah: musik (kiri) + video (kanan) berdampingan */}
+          <div className="flex items-center gap-2">
+
+            {/* Floating music icon button */}
+            <button
+              onClick={() => { if (!isExpanded) setIsExpanded(true); else togglePlay(); }}
+              title={isExpanded ? (isPlaying ? 'Pause' : 'Play') : 'Open Player'}
+              className="relative w-12 h-12 rounded-full overflow-hidden shadow-xl transition-all duration-300 hover:scale-105 active:scale-95"
+              style={{ border: isPlaying ? '2px solid #1db954' : '2px solid rgba(255,255,255,0.15)' }}
+            >
+              {current?.cover_url
+                ? <img src={current.cover_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                : <div className="absolute inset-0" style={{ background: '#1db954' }} />
+              }
+              <span className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.4)' }} />
+              {isPlaying && (
+                <span className="absolute inset-0 rounded-full animate-ping"
+                  style={{ border: '2px solid #1db954', animationDuration: '1.5s' }} />
               )}
-            </span>
-          </button>
+              <span className="relative z-10 flex items-center justify-center w-full h-full">
+                {isPlaying ? (
+                  <span className="flex items-end gap-[2px] h-4">
+                    {[8,14,10,13,7].map((h,i) => (
+                      <span key={i} className="w-[2.5px] rounded-full bg-white"
+                        style={{ height:`${h}px`, animation:`eq${(i%4)+1} ${0.4+i*0.1}s ease-in-out infinite alternate` }} />
+                    ))}
+                  </span>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="white" style={{ marginLeft:2 }}>
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                )}
+              </span>
+            </button>
+
+            {/* Floating video icon button */}
+            <button
+              onClick={() => setVideoOpen(v => !v)}
+              title={videoOpen ? 'Tutup video' : 'Buka video'}
+              className="relative w-12 h-12 rounded-full overflow-hidden shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center"
+              style={{
+                background: videoOpen ? '#1db954' : 'rgba(20,20,20,0.85)',
+                border: `2px solid ${videoOpen ? '#1db954' : 'rgba(255,255,255,0.2)'}`,
+                backdropFilter: 'blur(8px)'
+              }}
+            >
+              {videoOpen && (
+                <span className="absolute inset-0 rounded-full animate-ping"
+                  style={{ border: '2px solid #1db954', animationDuration: '2s' }} />
+              )}
+              <span className="relative z-10">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill={videoOpen ? 'white' : 'rgba(255,255,255,0.8)'}>
+                  <path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/>
+                </svg>
+              </span>
+            </button>
+
+          </div>
+
+          {/* Video player card — muncul di atas tombol video */}
+          {videoOpen && (
+            <div
+              className="fixed bottom-[130px] md:bottom-[76px] left-[72px] rounded-2xl overflow-hidden shadow-2xl"
+              style={{ width: '220px', border: '1px solid rgba(255,255,255,0.12)', background: '#000', zIndex: 51 }}
+            >
+              <div className="flex items-center justify-between px-3 py-2"
+                style={{ background: 'rgba(0,0,0,0.7)' }}>
+                <span className="text-white text-[11px] font-semibold tracking-wide opacity-70">Ambient Video</span>
+                <button onClick={() => setVideoOpen(false)}
+                  className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                    <path d="M1 1l10 10M11 1L1 11" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              </div>
+              <div className="relative" style={{ aspectRatio: '16/9' }}>
+                <video
+                  ref={videoRef}
+                  src="/assets/vidiohome.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          )}
+
         </div>
       )}
 
